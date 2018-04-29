@@ -7,7 +7,7 @@ Material:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: HelloShader
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 4800000, guid: 27319b34df0193e41a4d5056753956cc, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -76,3 +76,6 @@ Material:
     - _AmbientColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 0.091, g: 0, b: 0.68275833, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _myColor: {r: 0.19999981, g: 0, b: 1, a: 1}
+    - _myColour: {r: 1, g: 1, b: 1, a: 1}
+    - _myEmission: {r: 0.072330266, g: 0.20588237, b: 0.019679926, a: 1}
