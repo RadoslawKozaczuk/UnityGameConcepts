@@ -1,4 +1,33 @@
-﻿// how to name it and where to put it
+﻿/* Shader Language basic information
+	1) The code we write is only a code that is necessary to generate a shader
+	2) Shaders operate per pixel or per vertex - we don't need to write loops GPU does that
+	3) Variables are different:
+		- float - 32 bits, equivalent to C# float
+			used for world positions, texture coordinates and calculations
+		- half - 16 bits, half of a float
+			used for short vectors, directions and dynamic color ranges
+		- fixed - 11 bits, lowest precision float
+			used in regular colors and simple color operations
+		- int - 32 bits, like a C# int
+			used for counters and array indexes
+	4) Texture Data Types
+		- sampler2D
+		- samplerCUBE
+		each of this has high (float) and low (half) precision versions
+	5) Packed Arrays - a convenient way to make an array
+		for example: fixed4 or int3
+		but they can be accessed like a structure (r,g,b,a) or (x,y,z,w)
+		for example color1.r == color1.x // true
+		it is also possible to assign range of values 
+		color1 = color2.rgb
+	6) for complicated calculation there are Packed Matrices
+		float4x4 matrix; // declaration
+		accessing is weird:
+		float myVal = matrix._m20; // access Row2 Col0
+*/
+
+
+// how to name it and where to put it
 Shader "MyShader/HelloShader" {
 
 	Properties{
