@@ -1,13 +1,13 @@
 ﻿Shader "Custom/Shader4" {
 	Properties {
 
-		// first parameter is type, second is type too I guess, then start color and actual value
-		_diffuseTex("Texture", 2D) = "white" {}
+		// first parameter is name, second is type (I guess), then start color and actual value
+		_diffuseTex("my Texture", 2D) = "white" {}
 
 		//set this texture to black to stop the white
 		//overwhelming the effect if no emission texture
 		//is present
-		_emissionTex("Texture", 2D) = "black" {}
+		_emissionTex("troll Texture", 2D) = "black" {}
 	}
 
 	SubShader
