@@ -1,8 +1,10 @@
-﻿Shader "MyShader/PackedPractice" {
+﻿Shader "Custom/PackedPractice" {
 
 	// the purpose of uvs is to allow mapping part of the texture on the polygon
 	// uvs are always ordered in anticlockwise order on the face in which the normal face the viewer
 
+
+	// properties are the way we get values from the inspector to the shader
 	Properties{
 		_myColor("Example Color", Color) = (1,1,1,1)
 	}

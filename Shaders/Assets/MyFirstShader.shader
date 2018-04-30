@@ -28,7 +28,7 @@
 
 
 // how to name it and where to put it
-Shader "MyShader/HelloShader" {
+Shader "Custom/HelloShader" {
 
 	Properties{
 		_myColor("Example Color", Color) = (1, 1, 1, 1) // this is color picker
