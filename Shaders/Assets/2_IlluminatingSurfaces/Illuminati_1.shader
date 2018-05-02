@@ -13,6 +13,8 @@
 
 		// this "bump" is mandatory if we want to create a bump map
 		_myBump("Bump Texture", 2D) = "bump" {}
+
+		_mySlider("Bump Amount", Range(0, 10)) = 1
 	}
 
 	SubShader
@@ -23,6 +25,7 @@
 			// corresponding variables - names have to match
 			sampler2D _myTexture;
 			sampler2D _myBump;
+			half _mySlider;
 
 			struct Input {
 				// this has to match up with the name above
@@ -34,6 +37,7 @@
 			void surf(Input IN, inout SurfaceOutput o) {
 				o.Albedo = tex2D(_myTexture, IN.uv_myTexture).rgb;
 				o.Normal = UnpackNormal(tex2D(_myBump, IN.uv_myBump));
+				o.Normal *= float3(_mySlider, _mySlider, 1);
 			}
 
 		ENDCG

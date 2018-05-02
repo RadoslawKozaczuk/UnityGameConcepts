@@ -102,6 +102,7 @@ Material:
     - _ZWrite: 1
     - _myFloat: 0.5
     - _myRange: 1
+    - _mySlider: 10
     m_Colors:
     - _AmbientColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 0.091, g: 0, b: 0.68275833, a: 1}
