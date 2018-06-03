@@ -55,29 +55,3 @@ public class ShowNormals : MonoBehaviour
         }
     }
 }
-
-//[ExecuteInEditMode]
-//public class ShowNormals
-//{
-//    public Mesh Mesh;
-
-//    [SerializeField]
-//    Vector3[] m_normals;
-
-//    void OnEnable()
-//    {
-//        Mesh = GetComponent<MeshFilter>().mesh;
-//        m_normals = Mesh.normals;
-//    }
-
-//    public void ApplyNewNormals()
-//    {
-//        Vector3[] fixedNormals = new Vector3[m_normals.Length];
-//        for (int i = 0; i < m_normals.Length; i++)
-//        {
-//            fixedNormals[i] = m_normals[i];
-//            fixedNormals[i].Normalize();
-//        }
-//        Mesh.normals = fixedNormals;
-//    }
-//}
