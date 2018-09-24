@@ -28,4 +28,13 @@ public class GameDataWriter
         _writer.Write(value.y);
         _writer.Write(value.z);
     }
+
+    // Color32 stores data as int instead of floats which takes less storage capacity
+    public void Write(Color32 value)
+    {
+        _writer.Write(value.r);
+        _writer.Write(value.g);
+        _writer.Write(value.b);
+        _writer.Write(value.a);
+    }
 }

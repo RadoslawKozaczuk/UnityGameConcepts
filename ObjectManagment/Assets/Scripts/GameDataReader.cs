@@ -32,4 +32,12 @@ public class GameDataReader
         value.z = _reader.ReadSingle();
         return value;
     }
+
+    public Color32 ReadColor() => new Color32
+        {
+            r = _reader.ReadByte(),
+            g = _reader.ReadByte(),
+            b = _reader.ReadByte(),
+            a = _reader.ReadByte()
+        };
 }

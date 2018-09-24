@@ -3,8 +3,8 @@
 // Having multiple such components makes no sense. 
 // We can enforce this by adding the DisallowMultipleComponent attribute to the class.
 [DisallowMultipleComponent]
-public class PersistableObject : MonoBehaviour {
-
+public class PersistableObject : MonoBehaviour
+{
     public virtual void Save(GameDataWriter writer)
     {
         writer.Write(transform.localPosition);

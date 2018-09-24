@@ -47,12 +47,18 @@ public class Game : PersistableObject
         t.localPosition = Random.insideUnitSphere * 5f;
         t.localRotation = Random.rotation;
         t.localScale = Vector3.one * Random.Range(0.3f, 1f);
+        shape.SetColor(Random.ColorHSV(
+            hueMin: 0f, hueMax: 1f,
+            saturationMin: 0.5f, saturationMax: 1f,
+            valueMin: 0.25f, valueMax: 1f,
+            alphaMin: 1f, alphaMax: 1f
+        ));
         _shapes.Add(shape);
     }
 
     void BeginNewGame() {
         for (int i = 0; i < _shapes.Count; i++)
-
+            Destroy(_shapes[i].gameObject);
         // This leaves us with a list of references to destroyed objects, we must get rid of these as well
         _shapes.Clear();
     }
