@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Game : PersistableObject
 {
@@ -15,16 +16,39 @@ public class Game : PersistableObject
     public KeyCode powerKey = KeyCode.LeftShift;
     public PersistentStorage storage;
     public Transform ShapeParent;
-    
+
+    public Text CreationSpeedLabel;
+
+    // properties do not show up in the editor
+    public float CreationSpeed { get; set; }
+
     List<Shape> _shapes;
-    
-    void Awake()
-    {
-        _shapes = new List<Shape>();
-    }
+    float _creationProgress;
+
+    void Awake() =>_shapes = new List<Shape>();
 
     // Update is called once per frame
-    void Update () {
+    void Update ()
+    {
+        HandlePlayerInput();
+
+        CreationSpeedLabel.text = $"Creation Speed = {(int)CreationSpeed} shapes/s";
+
+        // we create the (int)CreationSpeed number of shapes per second
+        _creationProgress += Time.deltaTime * CreationSpeed;
+
+        // It might be possible that so much progress was made since the last frame that we end up with a value that's 2 or more. 
+        // This could happen during a frame rate dip, in combination with a high creation speed.
+        // Usage of while loop allows us to catch up as quickly as possible.
+        while (_creationProgress >= 1f)
+        {
+            _creationProgress -= 1f;
+            CreateShape();
+        }
+    }
+
+    void HandlePlayerInput()
+    {
         if (Input.GetKey(powerKey) && Input.GetKeyDown(createKey))
         {
             for (int i = 0; i < PowerCreationAmount; i++)
