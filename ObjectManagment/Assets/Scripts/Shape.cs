@@ -28,6 +28,12 @@ public class Shape : PersistableObject
     public void SetMaterial(Material material, int materialId)
     {
         _meshRenderer.material = material;
+        MaterialId = materialId;
+    }
+
+    public void SetColor(Color32 color)
+    {
+        _color = color;
 
         // A downside of setting a material's color is that this results in the creation of a new material, unique to the shape. 
         // This happens each time its color is set. We can avoid this by using a MaterialPropertyBlock instead. 
@@ -38,25 +44,14 @@ public class Shape : PersistableObject
 
         sharedPropertyBlock.SetColor(colorPropertyId, _color);
         _meshRenderer.SetPropertyBlock(sharedPropertyBlock);
-
-        MaterialId = materialId;
-    }
-
-    public void SetColor(Color32 color)
-    {
-        _color = color;
-        _meshRenderer.material.color = color;
+        _meshRenderer.material.color = _color;
     }
     Color32 _color;
     #endregion
-
     
     MeshRenderer _meshRenderer;
 
-    void Awake()
-    {
-        _meshRenderer = GetComponent<MeshRenderer>();
-    }
+    void Awake() =>_meshRenderer = GetComponent<MeshRenderer>();
 
     public override void Save(GameDataWriter writer)
     {
