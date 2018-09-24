@@ -2,6 +2,13 @@
 
 public class Shape : PersistableObject
 {
+    // Instead of using a string to name the color property, it is also possible to use an identifier. 
+    // These identifiers are setup by Unity. They can change, but remain constant per session. 
+    // So we can suffice with getting the identifier of the color property once, storing it in a static field. 
+    // The identifier is found by invoking the Shader.PropertyToID method with a name.
+    static readonly int colorPropertyId = Shader.PropertyToID("_Color");
+    static MaterialPropertyBlock sharedPropertyBlock;
+
     #region Properties
     public int ShapeId
     {
@@ -21,6 +28,17 @@ public class Shape : PersistableObject
     public void SetMaterial(Material material, int materialId)
     {
         _meshRenderer.material = material;
+
+        // A downside of setting a material's color is that this results in the creation of a new material, unique to the shape. 
+        // This happens each time its color is set. We can avoid this by using a MaterialPropertyBlock instead. 
+        // Create a new property block, set a color property named _Color, then use it as the renderer's property block, 
+        // by invoking MeshRenderer.SetPropertyBlock.
+        if (sharedPropertyBlock == null)
+            sharedPropertyBlock = new MaterialPropertyBlock();
+
+        sharedPropertyBlock.SetColor(colorPropertyId, _color);
+        _meshRenderer.SetPropertyBlock(sharedPropertyBlock);
+
         MaterialId = materialId;
     }
 
@@ -32,6 +50,7 @@ public class Shape : PersistableObject
     Color32 _color;
     #endregion
 
+    
     MeshRenderer _meshRenderer;
 
     void Awake()
