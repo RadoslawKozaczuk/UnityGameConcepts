@@ -46,7 +46,7 @@
 		// Use this pair of macros (END and START) to wrap the properties you want to be made unique to each instance.
 		UNITY_INSTANCING_BUFFER_START(Props)
 		UNITY_DEFINE_INSTANCED_PROP(fixed4, _Color) // add property to an array named 'Props'
-		// if smething is defined here it doesn't need to defined above
+		// if something is defined here it doesn't need to be defined above
 		UNITY_INSTANCING_BUFFER_END(Props)
 
 		void surf(Input IN, inout SurfaceOutputStandard o) {

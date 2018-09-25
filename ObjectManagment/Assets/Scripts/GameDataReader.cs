@@ -14,30 +14,26 @@ public class GameDataReader
 
     public int ReadInt() => _reader.ReadInt32();
 
-    public Quaternion ReadQuaternion()
+    public Quaternion ReadQuaternion() => new Quaternion
     {
-        Quaternion value;
-        value.x = _reader.ReadSingle();
-        value.y = _reader.ReadSingle();
-        value.z = _reader.ReadSingle();
-        value.w = _reader.ReadSingle();
-        return value;
-    }
+        x = _reader.ReadSingle(),
+        y = _reader.ReadSingle(),
+        z = _reader.ReadSingle(),
+        w = _reader.ReadSingle()
+    };
 
-    public Vector3 ReadVector3()
+    public Vector3 ReadVector3() => new Vector3
     {
-        Vector3 value;
-        value.x = _reader.ReadSingle();
-        value.y = _reader.ReadSingle();
-        value.z = _reader.ReadSingle();
-        return value;
-    }
+        x = _reader.ReadSingle(),
+        y = _reader.ReadSingle(),
+        z = _reader.ReadSingle()
+    };
 
     public Color32 ReadColor() => new Color32
-        {
-            r = _reader.ReadByte(),
-            g = _reader.ReadByte(),
-            b = _reader.ReadByte(),
-            a = _reader.ReadByte()
-        };
+    {
+        r = _reader.ReadByte(),
+        g = _reader.ReadByte(),
+        b = _reader.ReadByte(),
+        a = _reader.ReadByte()
+    };
 }

@@ -12,18 +12,28 @@ public class Game : PersistableObject
     public KeyCode newGameKey = KeyCode.N;
     public KeyCode saveKey = KeyCode.S;
     public KeyCode loadKey = KeyCode.L;
-    public KeyCode destroyKey = KeyCode.X;
+    public KeyCode destroyKey = KeyCode.D;
     public KeyCode powerKey = KeyCode.LeftShift;
     public PersistentStorage storage;
     public Transform ShapeParent;
 
+    /* === GUI ===
+        Although the screen-space canvas logically doesn't exist in 3D space, it still shows up in the scene window. 
+        This allows us to edit it, but that's hard to do while the scene window is in 3D mode. 
+        The GUI isn't aligned with the scene camera, and its scale is one unit per pixel, 
+        so it ends up like an enormous plane somewhere in the scene. 
+        When editing the GUI, you typically switch the scene window to 2D mode, 
+        which you can toggle via the 2D button on the left side of its toolbar.
+    */
     public Text CreationSpeedLabel;
+    public Text DestructionSpeedLabel;
 
     // properties do not show up in the editor
     public float CreationSpeed { get; set; }
+    public float DestructionSpeed { get; set; }
 
     List<Shape> _shapes;
-    float _creationProgress;
+    float _creationProgress, _destructionProgress;
 
     void Awake() =>_shapes = new List<Shape>();
 
@@ -33,6 +43,7 @@ public class Game : PersistableObject
         HandlePlayerInput();
 
         CreationSpeedLabel.text = $"Creation Speed = {(int)CreationSpeed} shapes/s";
+        DestructionSpeedLabel.text = $"Destruction Speed = {(int)DestructionSpeed} shapes/s";
 
         // we create the (int)CreationSpeed number of shapes per second
         _creationProgress += Time.deltaTime * CreationSpeed;
@@ -44,6 +55,46 @@ public class Game : PersistableObject
         {
             _creationProgress -= 1f;
             CreateShape();
+        }
+
+        _destructionProgress += Time.deltaTime * DestructionSpeed;
+        while (_destructionProgress >= 1f)
+        {
+            _destructionProgress -= 1f;
+            DestroyShape();
+        }
+    }
+
+    public override void Save(GameDataWriter writer)
+    {
+        writer.Write(SaveVersion);
+        writer.Write(_shapes.Count);
+        for (int i = 0; i < _shapes.Count; i++)
+        {
+            writer.Write(_shapes[i].ShapeId);
+            writer.Write(_shapes[i].MaterialId);
+            _shapes[i].Save(writer);
+        }
+    }
+
+    public override void Load(GameDataReader reader)
+    {
+        int saveVersion = reader.ReadInt();
+        if (saveVersion != SaveVersion)
+        {
+            Debug.LogError($"Save version {saveVersion} is unsupported");
+            return;
+        }
+
+        int count = reader.ReadInt();
+        for (int i = 0; i < count; i++)
+        {
+            int shapeId = reader.ReadInt();
+            int materialId = reader.ReadInt();
+            Shape shape = shapeFactory.Get(shapeId, materialId);
+            shape.Load(reader); // load the rest of shape's data
+            shape.transform.SetParent(ShapeParent);
+            _shapes.Add(shape);
         }
     }
 
@@ -102,12 +153,12 @@ public class Game : PersistableObject
         if (_shapes.Count > 0)
         {
             int index = Random.Range(0, _shapes.Count);
-            // === Zombie components === 
+
             // Although we have destroyed the shape, we haven't removed it from the shapes list. 
-            // Thus, the list still contains references to the components of the destroyed game objects. 
-            // They still exist in memory, in a zombie-like state. 
+            // Thus, the list still contains references to the components of the destroyed game objects.
+            // They still exist in memory, in a zombie-like state.
             // When trying to destroy such an object a second time, Unity reports an error.
-            Destroy(_shapes[index].gameObject);
+            shapeFactory.Destroy(_shapes[index]);
 
             // === List Optimization ===
             // The List class is implemented with arrays and the gap is eliminated 
@@ -123,49 +174,13 @@ public class Game : PersistableObject
             _shapes.RemoveAt(lastIndex);
         }
     }
-
-    void BeginNewGame() {
+    
+    void BeginNewGame()
+    {
         for (int i = 0; i < _shapes.Count; i++)
-            // Destroy works on either a game object, a component, or an asset. 
-            // To get rid of the entire shape object and not just its Shape component, 
-            // we have to explicitly destroy the game object that the component is a part of. 
-            // We can access it via the component's gameObject property.
-            Destroy(_shapes[i].gameObject);
+            shapeFactory.Destroy(_shapes[i]);
 
         // This leaves us with a list of references to destroyed objects, we must get rid of these as well
         _shapes.Clear();
-    }
-
-    public override void Save(GameDataWriter writer)
-    {
-        writer.Write(SaveVersion);
-        writer.Write(_shapes.Count);
-        for (int i = 0; i < _shapes.Count; i++)
-        {
-            writer.Write(_shapes[i].ShapeId);
-            writer.Write(_shapes[i].MaterialId);
-            _shapes[i].Save(writer);
-        }
-    }
-
-    public override void Load(GameDataReader reader)
-    {
-        int saveVersion = reader.ReadInt();
-        if(saveVersion != SaveVersion)
-        {
-            Debug.LogError($"Save version {saveVersion} is unsupported");
-            return;
-        }
-
-        int count = reader.ReadInt();
-        for (int i = 0; i < count; i++)
-        {
-            int shapeId = reader.ReadInt();
-            int materialId = reader.ReadInt();
-            Shape shape = shapeFactory.Get(shapeId, materialId);
-            shape.Load(reader); // load the rest of shape's data
-            shape.transform.SetParent(ShapeParent);
-            _shapes.Add(shape);
-        }
     }
 }
