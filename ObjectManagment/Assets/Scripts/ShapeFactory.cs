@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // To add such an asset to our project, we'll have to add an entry for it to Unity's menu.
 // The simplest way to do this is by adding the CreateAssetMenu attribute to our class.
@@ -17,7 +18,11 @@ public class ShapeFactory : ScriptableObject
     // We use lists instead of stacks because they survive recompilation in play mode, while stacks don't. 
     // Unity doesn't serialize stacks. You could use stacks instead, but lists work just fine.
     List<Shape>[] _pools;
-    
+    // We cannot make _pools Serializable becasue that would make Unity save the _pools as part of the asset, 
+    // persisting it between editor play sessions and including it in builds.
+
+    Scene _poolScene;
+
     public Shape Get(int shapeId = 0, int materialId = 0)
     {
         if (_recycle)
@@ -40,6 +45,7 @@ public class ShapeFactory : ScriptableObject
             {
                 var shape = Instantiate(_prefabs[shapeId]);
                 shape.ShapeId = shapeId;
+                SceneManager.MoveGameObjectToScene(shape.gameObject, _poolScene);
                 return shape;
             }
         }
@@ -50,7 +56,7 @@ public class ShapeFactory : ScriptableObject
     public Shape GetRandom() => Get(Random.Range(0, _prefabs.Length), Random.Range(0, _materials.Length));
 
     /// <summary>
-    /// If recycle is set to true the object will be returned to the Factory's object poll.
+    /// If recycle is set to true the object will be returned to the Factory's object pool.
     /// Otherwise the object will be destroyed.
     /// </summary>
     public void Destroy(Shape shape)
@@ -79,5 +85,29 @@ public class ShapeFactory : ScriptableObject
         _pools = new List<Shape>[_prefabs.Length];
         for (int i = 0; i < _pools.Length; i++)
             _pools[i] = new List<Shape>();
+
+        // Scene is a struct, not a direct reference to the actual scene. 
+        // As it is not serializable, recompilation resets the struct to its default values, which indicates an unloaded scene.
+        // To avoid this problem we have to request a fresh connection.
+        // This problem may only occur in the Editor.
+        if (Application.isEditor)
+        {
+            _poolScene = SceneManager.GetSceneByName(name);
+            if (_poolScene.isLoaded)
+            {
+                // Second possible problem in this scenario is losing the list that keep track on the unactive objects.
+                // We can solve this by repopulating the lists.
+                GameObject[] rootObjects = _poolScene.GetRootGameObjects();
+                for (int i = 0; i < rootObjects.Length; i++)
+                {
+                    Shape pooledShape = rootObjects[i].GetComponent<Shape>();
+                    if (!pooledShape.gameObject.activeSelf)
+                        _pools[pooledShape.ShapeId].Add(pooledShape);
+                }
+                return;
+            }
+        }
+
+        _poolScene = SceneManager.CreateScene(name);
     }
 }

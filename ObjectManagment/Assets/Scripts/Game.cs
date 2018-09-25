@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Game : PersistableObject
@@ -35,7 +37,25 @@ public class Game : PersistableObject
     List<Shape> _shapes;
     float _creationProgress, _destructionProgress;
 
-    void Awake() =>_shapes = new List<Shape>();
+    void Start()
+    {
+        _shapes = new List<Shape>();
+
+        // When playing in the Editor we may accidentally load the scene twice if the scene was open in the Editor already
+        // before we clicked the play button.
+        // To prevent it from happening we have to check if the scene is loaded already at this point.
+        if (Application.isEditor)
+        {
+            Scene loadedLevel = SceneManager.GetSceneByName("Level 1");
+            if (loadedLevel.isLoaded)
+            {
+                SceneManager.SetActiveScene(loadedLevel);
+                return;
+            }
+        }
+        
+        StartCoroutine(LoadLevel());
+    }
 
     // Update is called once per frame
     void Update ()
@@ -93,7 +113,6 @@ public class Game : PersistableObject
             int materialId = reader.ReadInt();
             Shape shape = shapeFactory.Get(shapeId, materialId);
             shape.Load(reader); // load the rest of shape's data
-            shape.transform.SetParent(ShapeParent);
             _shapes.Add(shape);
         }
     }
@@ -135,7 +154,12 @@ public class Game : PersistableObject
         t.localPosition = Random.insideUnitSphere * 5f;
         t.localRotation = Random.rotation;
         t.localScale = Vector3.one * Random.Range(0.3f, 1f);
-        t.SetParent(ShapeParent);
+
+        // Having a lot of dynamically changing objects under one parent object can negatively impact our game's performance 
+        // when shapes are changed. 
+        // Whenever an object's active or transform state changes, all its parent objects are notified of this change.
+        // Better solution is to use separate scenes - we will use this approach in the ShapeFactory.
+        //shape.transform.SetParent(ShapeParent);
 
         shape.SetColor(Random.ColorHSV(
             hueMin: 0f, hueMax: 1f,
@@ -183,4 +207,14 @@ public class Game : PersistableObject
         // This leaves us with a list of references to destroyed objects, we must get rid of these as well
         _shapes.Clear();
     }
+
+    IEnumerator LoadLevel()
+    {
+        enabled = false;
+        // Scene loaded with the LoadSceneMode.Additive as an additional argument will be added to already loaded scenes.
+        yield return SceneManager.LoadSceneAsync("Level 1", LoadSceneMode.Additive);
+        SceneManager.SetActiveScene(SceneManager.GetSceneByName("Level 1"));
+        enabled = true;
+    }
+
 }
