@@ -18,6 +18,7 @@ public class Game : PersistableObject
     public KeyCode powerKey = KeyCode.LeftShift;
     public PersistentStorage storage;
     public Transform ShapeParent;
+    public int levelCount;
 
     /* === GUI ===
         Although the screen-space canvas logically doesn't exist in 3D space, it still shows up in the scene window. 
@@ -36,6 +37,7 @@ public class Game : PersistableObject
 
     List<Shape> _shapes;
     float _creationProgress, _destructionProgress;
+    int _loadedLevelBuildIndex;
 
     void Start()
     {
@@ -46,21 +48,28 @@ public class Game : PersistableObject
         // To prevent it from happening we have to check if the scene is loaded already at this point.
         if (Application.isEditor)
         {
-            Scene loadedLevel = SceneManager.GetSceneByName("Level 1");
-            if (loadedLevel.isLoaded)
+            // we want only once scene to be active
+            for (int i = 0; i < SceneManager.sceneCount; i++)
             {
-                SceneManager.SetActiveScene(loadedLevel);
-                return;
+                Scene loadedScene = SceneManager.GetSceneAt(i);
+                if (loadedScene.name.Contains("Level "))
+                {
+                    SceneManager.SetActiveScene(loadedScene);
+                    return;
+                }
             }
         }
         
-        StartCoroutine(LoadLevel());
+        StartCoroutine(LoadLevel(1));
     }
 
     // Update is called once per frame
     void Update ()
     {
-        HandlePlayerInput();
+        bool skipUpdate;
+        HandlePlayerInput(out skipUpdate);
+
+        if (skipUpdate) return;
 
         CreationSpeedLabel.text = $"Creation Speed = {(int)CreationSpeed} shapes/s";
         DestructionSpeedLabel.text = $"Destruction Speed = {(int)DestructionSpeed} shapes/s";
@@ -89,6 +98,7 @@ public class Game : PersistableObject
     {
         writer.Write(SaveVersion);
         writer.Write(_shapes.Count);
+        writer.Write(_loadedLevelBuildIndex);
         for (int i = 0; i < _shapes.Count; i++)
         {
             writer.Write(_shapes[i].ShapeId);
@@ -107,6 +117,7 @@ public class Game : PersistableObject
         }
 
         int count = reader.ReadInt();
+        StartCoroutine(LoadLevel(reader.ReadInt()));
         for (int i = 0; i < count; i++)
         {
             int shapeId = reader.ReadInt();
@@ -117,8 +128,10 @@ public class Game : PersistableObject
         }
     }
 
-    void HandlePlayerInput()
+    void HandlePlayerInput(out bool skipUpdate)
     {
+        skipUpdate = false;
+
         if (Input.GetKey(powerKey) && Input.GetKeyDown(createKey))
         {
             for (int i = 0; i < PowerCreationAmount; i++)
@@ -144,6 +157,19 @@ public class Game : PersistableObject
         {
             BeginNewGame();
             storage.Load(this);
+        }
+        else
+        {
+            for (int i = 1; i <= levelCount; i++)
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha0 + i))
+                {
+                    BeginNewGame();
+                    StartCoroutine(LoadLevel(i));
+                    skipUpdate = true;
+                    return;
+                }
+            }
         }
     }
 
@@ -208,12 +234,18 @@ public class Game : PersistableObject
         _shapes.Clear();
     }
 
-    IEnumerator LoadLevel()
+    // level build index are set in File -> Build Settings
+    IEnumerator LoadLevel(int levelBuildIndex)
     {
         enabled = false;
+        if (_loadedLevelBuildIndex > 0)
+            yield return SceneManager.UnloadSceneAsync(_loadedLevelBuildIndex);
+        
         // Scene loaded with the LoadSceneMode.Additive as an additional argument will be added to already loaded scenes.
-        yield return SceneManager.LoadSceneAsync("Level 1", LoadSceneMode.Additive);
-        SceneManager.SetActiveScene(SceneManager.GetSceneByName("Level 1"));
+        yield return SceneManager.LoadSceneAsync(levelBuildIndex, LoadSceneMode.Additive);
+        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(levelBuildIndex));
+
+        _loadedLevelBuildIndex = levelBuildIndex;
         enabled = true;
     }
 

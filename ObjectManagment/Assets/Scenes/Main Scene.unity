@@ -403,6 +403,7 @@ MonoBehaviour:
   powerKey: 304
   storage: {fileID: 1097387181}
   ShapeParent: {fileID: 1999428847}
+  levelCount: 2
   CreationSpeedLabel: {fileID: 458373947}
   DestructionSpeedLabel: {fileID: 43046341}
 --- !u!1 &458373945
