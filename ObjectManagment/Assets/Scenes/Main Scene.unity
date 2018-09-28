@@ -394,18 +394,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63c21deb279b6cb46a2e12c4f35e5231, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shapeFactory: {fileID: 11400000, guid: d28d8b8d6ea72e14886396f41fcefeaa, type: 2}
-  createKey: 99
-  newGameKey: 110
-  saveKey: 115
-  loadKey: 108
-  destroyKey: 100
-  powerKey: 304
-  storage: {fileID: 1097387181}
+  CreateKey: 99
+  NewGameKey: 110
+  SaveKey: 115
+  LoadKey: 108
+  DestroyKey: 100
+  PowerKey: 304
+  Storage: {fileID: 1097387181}
   ShapeParent: {fileID: 1999428847}
-  levelCount: 2
+  LevelCount: 2
   CreationSpeedLabel: {fileID: 458373947}
   DestructionSpeedLabel: {fileID: 43046341}
+  _shapeFactory: {fileID: 11400000, guid: d28d8b8d6ea72e14886396f41fcefeaa, type: 2}
 --- !u!1 &458373945
 GameObject:
   m_ObjectHideFlags: 0
@@ -552,7 +552,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 534669902}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 1, z: -29.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

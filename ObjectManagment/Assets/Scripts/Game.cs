@@ -9,16 +9,18 @@ public class Game : PersistableObject
     const int SaveVersion = 1;
     const int PowerCreationAmount = 5;
 
-    public ShapeFactory shapeFactory;
-    public KeyCode createKey = KeyCode.C;
-    public KeyCode newGameKey = KeyCode.N;
-    public KeyCode saveKey = KeyCode.S;
-    public KeyCode loadKey = KeyCode.L;
-    public KeyCode destroyKey = KeyCode.D;
-    public KeyCode powerKey = KeyCode.LeftShift;
-    public PersistentStorage storage;
+    public static Game Instance { get; private set; }
+
+    public SpawnZone SpawnZoneOfLevel { get; set; }
+    public KeyCode CreateKey = KeyCode.C;
+    public KeyCode NewGameKey = KeyCode.N;
+    public KeyCode SaveKey = KeyCode.S;
+    public KeyCode LoadKey = KeyCode.L;
+    public KeyCode DestroyKey = KeyCode.D;
+    public KeyCode PowerKey = KeyCode.LeftShift;
+    public PersistentStorage Storage;
     public Transform ShapeParent;
-    public int levelCount;
+    public int LevelCount;
 
     /* === GUI ===
         Although the screen-space canvas logically doesn't exist in 3D space, it still shows up in the scene window. 
@@ -34,11 +36,33 @@ public class Game : PersistableObject
     // properties do not show up in the editor
     public float CreationSpeed { get; set; }
     public float DestructionSpeed { get; set; }
-
+    
+    [SerializeField] ShapeFactory _shapeFactory;
     List<Shape> _shapes;
     float _creationProgress, _destructionProgress;
     int _loadedLevelBuildIndex;
 
+    // Awake is called after all objects are initialized.
+    // Awake is always called before any Start functions. This allows you to order initialization of scripts. 
+    // Awake can not act as a coroutine.
+    void Awake()
+    {
+
+    }
+
+    // It gets invoked each time a disabled component is enabled. In case of a recompilation while in play mode, 
+    // all active components are disabled first, then the game state is saved, compilation happens, the game state is restored, 
+    // and previously active components are enabled again.
+    // Also, OnEnable gets invoked immediately after a component's Awake method, unless the component was saved in a disabled state.
+    void OnEnable()
+    {
+        Instance = this;
+    }
+
+    // Start is called on the frame when a script is enabled just before any of the Update methods is called the first time.
+    // Like the Awake function, Start is called exactly once in the lifetime of the script.
+    // However, Awake is called when the script object is initialized, regardless of whether or not the script is enabled.
+    // Start may not be called on the same frame as Awake if the script is not enabled at initialization time.
     void Start()
     {
         _shapes = new List<Shape>();
@@ -46,30 +70,33 @@ public class Game : PersistableObject
         // When playing in the Editor we may accidentally load the scene twice if the scene was open in the Editor already
         // before we clicked the play button.
         // To prevent it from happening we have to check if the scene is loaded already at this point.
-        if (Application.isEditor)
+        if(Application.isEditor)
         {
             // we want only once scene to be active
-            for (int i = 0; i < SceneManager.sceneCount; i++)
+            for(int i = 0; i < SceneManager.sceneCount; i++)
             {
                 Scene loadedScene = SceneManager.GetSceneAt(i);
-                if (loadedScene.name.Contains("Level "))
+                if(loadedScene.name.Contains("Level "))
                 {
                     SceneManager.SetActiveScene(loadedScene);
                     return;
                 }
             }
         }
-        
+
         StartCoroutine(LoadLevel(1));
     }
 
     // Update is called once per frame
-    void Update ()
+    void Update()
     {
         bool skipUpdate;
         HandlePlayerInput(out skipUpdate);
 
-        if (skipUpdate) return;
+        if(skipUpdate)
+        {
+            return;
+        }
 
         CreationSpeedLabel.text = $"Creation Speed = {(int)CreationSpeed} shapes/s";
         DestructionSpeedLabel.text = $"Destruction Speed = {(int)DestructionSpeed} shapes/s";
@@ -80,14 +107,14 @@ public class Game : PersistableObject
         // It might be possible that so much progress was made since the last frame that we end up with a value that's 2 or more. 
         // This could happen during a frame rate dip, in combination with a high creation speed.
         // Usage of while loop allows us to catch up as quickly as possible.
-        while (_creationProgress >= 1f)
+        while(_creationProgress >= 1f)
         {
             _creationProgress -= 1f;
             CreateShape();
         }
 
         _destructionProgress += Time.deltaTime * DestructionSpeed;
-        while (_destructionProgress >= 1f)
+        while(_destructionProgress >= 1f)
         {
             _destructionProgress -= 1f;
             DestroyShape();
@@ -99,7 +126,7 @@ public class Game : PersistableObject
         writer.Write(SaveVersion);
         writer.Write(_shapes.Count);
         writer.Write(_loadedLevelBuildIndex);
-        for (int i = 0; i < _shapes.Count; i++)
+        for(int i = 0; i < _shapes.Count; i++)
         {
             writer.Write(_shapes[i].ShapeId);
             writer.Write(_shapes[i].MaterialId);
@@ -110,7 +137,7 @@ public class Game : PersistableObject
     public override void Load(GameDataReader reader)
     {
         int saveVersion = reader.ReadInt();
-        if (saveVersion != SaveVersion)
+        if(saveVersion != SaveVersion)
         {
             Debug.LogError($"Save version {saveVersion} is unsupported");
             return;
@@ -118,11 +145,11 @@ public class Game : PersistableObject
 
         int count = reader.ReadInt();
         StartCoroutine(LoadLevel(reader.ReadInt()));
-        for (int i = 0; i < count; i++)
+        for(int i = 0; i < count; i++)
         {
             int shapeId = reader.ReadInt();
             int materialId = reader.ReadInt();
-            Shape shape = shapeFactory.Get(shapeId, materialId);
+            Shape shape = _shapeFactory.Get(shapeId, materialId);
             shape.Load(reader); // load the rest of shape's data
             _shapes.Add(shape);
         }
@@ -132,37 +159,37 @@ public class Game : PersistableObject
     {
         skipUpdate = false;
 
-        if (Input.GetKey(powerKey) && Input.GetKeyDown(createKey))
+        if(Input.GetKey(PowerKey) && Input.GetKeyDown(CreateKey))
         {
-            for (int i = 0; i < PowerCreationAmount; i++)
+            for(int i = 0; i < PowerCreationAmount; i++)
                 CreateShape();
         }
-        else if (Input.GetKeyDown(createKey))
+        else if(Input.GetKeyDown(CreateKey))
         {
             CreateShape();
         }
-        else if (Input.GetKeyDown(destroyKey))
+        else if(Input.GetKeyDown(DestroyKey))
         {
             DestroyShape();
         }
-        else if (Input.GetKeyDown(newGameKey))
+        else if(Input.GetKeyDown(NewGameKey))
         {
             BeginNewGame();
         }
-        else if (Input.GetKeyDown(saveKey))
+        else if(Input.GetKeyDown(SaveKey))
         {
-            storage.Save(this);
+            Storage.Save(this);
         }
-        else if (Input.GetKeyDown(loadKey))
+        else if(Input.GetKeyDown(LoadKey))
         {
             BeginNewGame();
-            storage.Load(this);
+            Storage.Load(this);
         }
         else
         {
-            for (int i = 1; i <= levelCount; i++)
+            for(int i = 1; i <= LevelCount; i++)
             {
-                if (Input.GetKeyDown(KeyCode.Alpha0 + i))
+                if(Input.GetKeyDown(KeyCode.Alpha0 + i))
                 {
                     BeginNewGame();
                     StartCoroutine(LoadLevel(i));
@@ -175,9 +202,9 @@ public class Game : PersistableObject
 
     void CreateShape()
     {
-        Shape shape = shapeFactory.GetRandom();
+        Shape shape = _shapeFactory.GetRandom();
         Transform t = shape.transform;
-        t.localPosition = Random.insideUnitSphere * 5f;
+        t.localPosition = SpawnZoneOfLevel.SpawnPoint;
         t.localRotation = Random.rotation;
         t.localScale = Vector3.one * Random.Range(0.3f, 1f);
 
@@ -193,14 +220,14 @@ public class Game : PersistableObject
             valueMin: 0.25f, valueMax: 1f,
             alphaMin: 1f, alphaMax: 1f
         ));
-        
+
         _shapes.Add(shape);
     }
 
     // destroy random object
     void DestroyShape()
     {
-        if (_shapes.Count > 0)
+        if(_shapes.Count > 0)
         {
             int index = Random.Range(0, _shapes.Count);
 
@@ -208,7 +235,7 @@ public class Game : PersistableObject
             // Thus, the list still contains references to the components of the destroyed game objects.
             // They still exist in memory, in a zombie-like state.
             // When trying to destroy such an object a second time, Unity reports an error.
-            shapeFactory.Destroy(_shapes[index]);
+            _shapeFactory.Destroy(_shapes[index]);
 
             // === List Optimization ===
             // The List class is implemented with arrays and the gap is eliminated 
@@ -224,11 +251,11 @@ public class Game : PersistableObject
             _shapes.RemoveAt(lastIndex);
         }
     }
-    
+
     void BeginNewGame()
     {
-        for (int i = 0; i < _shapes.Count; i++)
-            shapeFactory.Destroy(_shapes[i]);
+        for(int i = 0; i < _shapes.Count; i++)
+            _shapeFactory.Destroy(_shapes[i]);
 
         // This leaves us with a list of references to destroyed objects, we must get rid of these as well
         _shapes.Clear();
@@ -238,9 +265,9 @@ public class Game : PersistableObject
     IEnumerator LoadLevel(int levelBuildIndex)
     {
         enabled = false;
-        if (_loadedLevelBuildIndex > 0)
+        if(_loadedLevelBuildIndex > 0)
             yield return SceneManager.UnloadSceneAsync(_loadedLevelBuildIndex);
-        
+
         // Scene loaded with the LoadSceneMode.Additive as an additional argument will be added to already loaded scenes.
         yield return SceneManager.LoadSceneAsync(levelBuildIndex, LoadSceneMode.Additive);
         SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(levelBuildIndex));
