@@ -18,7 +18,7 @@ public class ShapeFactory : ScriptableObject
     // We use lists instead of stacks because they survive recompilation in play mode, while stacks don't. 
     // Unity doesn't serialize stacks. You could use stacks instead, but lists work just fine.
     List<Shape>[] _pools;
-    // We cannot make _pools Serializable becasue that would make Unity save the _pools as part of the asset, 
+    // We cannot make _pools Serializable because that would make Unity save the _pools as part of the asset, 
     // persisting it between editor play sessions and including it in builds.
 
     Scene _poolScene;
@@ -68,7 +68,7 @@ public class ShapeFactory : ScriptableObject
 
             _pools[shape.ShapeId].Add(shape);
             // we disable the object so it is no longer used in the scene
-            shape.gameObject.SetActive(false); 
+            shape.gameObject.SetActive(false);
         }
         else
         {
@@ -92,10 +92,10 @@ public class ShapeFactory : ScriptableObject
         // This problem may only occur in the Editor.
         if (Application.isEditor)
         {
-            _poolScene = SceneManager.GetSceneByName(name);
+            _poolScene = SceneManager.GetSceneByName(name); // get the scene by the name of this object
             if (_poolScene.isLoaded)
             {
-                // Second possible problem in this scenario is losing the list that keep track on the unactive objects.
+                // Second possible problem in this scenario is losing the list that keep track on the inactive objects.
                 // We can solve this by repopulating the lists.
                 GameObject[] rootObjects = _poolScene.GetRootGameObjects();
                 for (int i = 0; i < rootObjects.Length; i++)

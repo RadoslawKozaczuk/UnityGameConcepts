@@ -6,12 +6,8 @@ using UnityEngine.UI;
 
 public class Game : PersistableObject
 {
-    const int SaveVersion = 1;
     const int PowerCreationAmount = 5;
-
-    public static Game Instance { get; private set; }
-
-    public SpawnZone SpawnZoneOfLevel { get; set; }
+    
     public KeyCode CreateKey = KeyCode.C;
     public KeyCode NewGameKey = KeyCode.N;
     public KeyCode SaveKey = KeyCode.S;
@@ -19,7 +15,6 @@ public class Game : PersistableObject
     public KeyCode DestroyKey = KeyCode.D;
     public KeyCode PowerKey = KeyCode.LeftShift;
     public PersistentStorage Storage;
-    public Transform ShapeParent;
     public int LevelCount;
 
     /* === GUI ===
@@ -38,7 +33,9 @@ public class Game : PersistableObject
     public float DestructionSpeed { get; set; }
     
     [SerializeField] ShapeFactory _shapeFactory;
+    [SerializeField] bool _reseedRandomOnLoad;
     List<Shape> _shapes;
+    Random.State _randomGeneratorState;
     float _creationProgress, _destructionProgress;
     int _loadedLevelBuildIndex;
 
@@ -56,7 +53,7 @@ public class Game : PersistableObject
     // Also, OnEnable gets invoked immediately after a component's Awake method, unless the component was saved in a disabled state.
     void OnEnable()
     {
-        Instance = this;
+
     }
 
     // Start is called on the frame when a script is enabled just before any of the Update methods is called the first time.
@@ -65,6 +62,7 @@ public class Game : PersistableObject
     // Start may not be called on the same frame as Awake if the script is not enabled at initialization time.
     void Start()
     {
+        _randomGeneratorState = Random.state;
         _shapes = new List<Shape>();
 
         // When playing in the Editor we may accidentally load the scene twice if the scene was open in the Editor already
@@ -72,7 +70,7 @@ public class Game : PersistableObject
         // To prevent it from happening we have to check if the scene is loaded already at this point.
         if(Application.isEditor)
         {
-            // we want only once scene to be active
+            // we only want one scene to be active
             for(int i = 0; i < SceneManager.sceneCount; i++)
             {
                 Scene loadedScene = SceneManager.GetSceneAt(i);
@@ -84,6 +82,7 @@ public class Game : PersistableObject
             }
         }
 
+        BeginNewGame();
         StartCoroutine(LoadLevel(1));
     }
 
@@ -93,10 +92,7 @@ public class Game : PersistableObject
         bool skipUpdate;
         HandlePlayerInput(out skipUpdate);
 
-        if(skipUpdate)
-        {
-            return;
-        }
+        if(skipUpdate) return;
 
         CreationSpeedLabel.text = $"Creation Speed = {(int)CreationSpeed} shapes/s";
         DestructionSpeedLabel.text = $"Destruction Speed = {(int)DestructionSpeed} shapes/s";
@@ -123,9 +119,10 @@ public class Game : PersistableObject
 
     public override void Save(GameDataWriter writer)
     {
-        writer.Write(SaveVersion);
         writer.Write(_shapes.Count);
+        writer.Write(Random.state);
         writer.Write(_loadedLevelBuildIndex);
+        GameLevel.Current.Save(writer);
         for(int i = 0; i < _shapes.Count; i++)
         {
             writer.Write(_shapes[i].ShapeId);
@@ -136,14 +133,12 @@ public class Game : PersistableObject
 
     public override void Load(GameDataReader reader)
     {
-        int saveVersion = reader.ReadInt();
-        if(saveVersion != SaveVersion)
-        {
-            Debug.LogError($"Save version {saveVersion} is unsupported");
-            return;
-        }
-
         int count = reader.ReadInt();
+
+        Random.State state = reader.ReadRandomState();
+        if(!_reseedRandomOnLoad)
+            Random.state = state;
+
         StartCoroutine(LoadLevel(reader.ReadInt()));
         for(int i = 0; i < count; i++)
         {
@@ -204,7 +199,7 @@ public class Game : PersistableObject
     {
         Shape shape = _shapeFactory.GetRandom();
         Transform t = shape.transform;
-        t.localPosition = SpawnZoneOfLevel.SpawnPoint;
+        t.localPosition = GameLevel.Current.SpawnPoint;
         t.localRotation = Random.rotation;
         t.localScale = Vector3.one * Random.Range(0.3f, 1f);
 
@@ -254,6 +249,16 @@ public class Game : PersistableObject
 
     void BeginNewGame()
     {
+        Random.state = _randomGeneratorState;
+
+        // unpredictable seed
+        // '^' is exclusive OR meaning 1 when at least one of input is 1, and 0 otherwise
+        int seed = Random.Range(0, int.MaxValue) ^ (int)Time.unscaledTime;
+        _randomGeneratorState = Random.state;
+
+        // we need new seed each time so different games does not share the same random sequence
+        Random.InitState(seed);
+
         for(int i = 0; i < _shapes.Count; i++)
             _shapeFactory.Destroy(_shapes[i]);
 
@@ -275,5 +280,4 @@ public class Game : PersistableObject
         _loadedLevelBuildIndex = levelBuildIndex;
         enabled = true;
     }
-
 }
