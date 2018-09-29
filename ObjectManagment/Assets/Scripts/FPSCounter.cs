@@ -31,13 +31,7 @@ public class FPSCounter : MonoBehaviour
     public int AverageFPS { get; private set; }
     public int LowestFPS { get; private set; }
 
-    [SerializeField] FPSColor[] _coloring; /* = {
-        new FPSColor() { color = Color.blue, minimumFPS = 60 },
-        new FPSColor() { color = Color.green, minimumFPS = 45 },
-        new FPSColor() { color = Color.yellow, minimumFPS = 30 },
-        new FPSColor() { color = new Color(255, 140, 0, 0), minimumFPS = 15 },
-        new FPSColor() { color = Color.red, minimumFPS = 0 }
-    }; */
+    [SerializeField] FPSColor[] _coloring;
     int[] _fpsBuffer; // we store all values from the last second
     int _fpsBufferIndex; // index of the curretly stored value
     
@@ -105,8 +99,8 @@ public class FPSCounter : MonoBehaviour
                 lowest = fps;
         }
 
-        AverageFPS = sum / FrameRange;
         HighestFPS = highest;
+        AverageFPS = sum / FrameRange;
         LowestFPS = lowest;
     }
 }

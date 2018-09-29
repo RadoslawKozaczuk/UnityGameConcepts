@@ -37,8 +37,5 @@ public class GameDataReader
         a = _reader.ReadByte()
     };
 
-    public Random.State ReadRandomState()
-    {
-        return JsonUtility.FromJson<Random.State>(_reader.ReadString());
-    }
+    public Random.State ReadRandomState() => JsonUtility.FromJson<Random.State>(_reader.ReadString());
 }

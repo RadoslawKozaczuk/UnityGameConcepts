@@ -2,7 +2,7 @@
 
 public class CompositeSpawnZone : SpawnZone
 {
-    public SpawnZone[] _spawnZones;
+    public SpawnZone[] SpawnZones;
     // for true spawner will iterate through spawning zones, otherwise the spawning zone is chosen randomly
     [SerializeField] bool _sequential;
     int _nextSequentialIndex;
@@ -15,14 +15,14 @@ public class CompositeSpawnZone : SpawnZone
             if(_sequential)
             {
                 index = _nextSequentialIndex++;
-                if(_nextSequentialIndex >= _spawnZones.Length)
+                if(_nextSequentialIndex >= SpawnZones.Length)
                     _nextSequentialIndex = 0;
             }
             else
             {
-                index = Random.Range(0, _spawnZones.Length);
+                index = Random.Range(0, SpawnZones.Length);
             }
-            return _spawnZones[index].SpawnPoint;
+            return SpawnZones[index].SpawnPoint;
         }
     }
 

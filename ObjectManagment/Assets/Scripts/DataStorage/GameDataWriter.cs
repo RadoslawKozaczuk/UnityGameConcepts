@@ -38,11 +38,7 @@ public class GameDataWriter
         _writer.Write(value.a);
     }
 
-    public void Write(Random.State value)
-    {
-        // Random.State contains four floating-point numbers. 
-        // However, they aren't publicly accessible, so it is not possible for us to simply write them.
-        Debug.Log(JsonUtility.ToJson(value));
-        _writer.Write(JsonUtility.ToJson(value));
-    }
+    // Random.State contains four floating-point numbers. 
+    // However, they aren't publicly accessible, so it is not possible for us to simply write them.
+    public void Write(Random.State value) => _writer.Write(JsonUtility.ToJson(value));
 }
