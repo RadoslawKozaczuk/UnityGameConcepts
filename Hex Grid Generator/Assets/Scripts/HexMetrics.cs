@@ -15,6 +15,7 @@ public static class HexMetrics
         new Vector3(InnerRadius, 0f, -0.5f * OuterRadius),
         new Vector3(0f, 0f, -OuterRadius),
         new Vector3(-InnerRadius, 0f, -0.5f * OuterRadius),
-        new Vector3(-InnerRadius, 0f, 0.5f * OuterRadius)
+        new Vector3(-InnerRadius, 0f, 0.5f * OuterRadius),
+        new Vector3(0f, 0f, OuterRadius) // seventh and first are exactly the same to prevent IndexOutOfBonds exception
     };
 }

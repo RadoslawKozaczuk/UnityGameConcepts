@@ -7,18 +7,25 @@ public class HexGrid : MonoBehaviour
     public Text CellLabelPrefab;
     public int Width = 6;
     public int Height = 6;
-    
+
+    HexMesh _hexMesh;
     HexCell[] _cells;
     Canvas _gridCanvas;
 
     void Awake()
     {
+        _hexMesh = GetComponentInChildren<HexMesh>();
         _gridCanvas = GetComponentInChildren<Canvas>();
         _cells = new HexCell[Height * Width];
 
         for (int z = 0, i = 0; z < Height; z++)
             for (int x = 0; x < Width; x++)
                 CreateCell(x, z, i++);
+    }
+
+    void Start()
+    {
+        _hexMesh.Triangulate(_cells);
     }
 
     void CreateCell(int x, int z, int i)
