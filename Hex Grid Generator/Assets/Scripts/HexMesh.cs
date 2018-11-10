@@ -8,9 +8,14 @@ public class HexMesh : MonoBehaviour
     List<Vector3> _vertices;
     List<int> _triangles;
 
+    // we need mesh collider to make the object clickable
+    MeshCollider _meshCollider;
+
     void Awake()
     {
         GetComponent<MeshFilter>().mesh = _hexMesh = new Mesh();
+        _meshCollider = gameObject.AddComponent<MeshCollider>();
+
         _hexMesh.name = "Hex Mesh";
         _vertices = new List<Vector3>();
         _triangles = new List<int>();
@@ -30,6 +35,8 @@ public class HexMesh : MonoBehaviour
         _hexMesh.vertices = _vertices.ToArray();
         _hexMesh.triangles = _triangles.ToArray();
         _hexMesh.RecalculateNormals();
+
+        _meshCollider.sharedMesh = _hexMesh;
     }
     
     void Triangulate(HexCell cell)

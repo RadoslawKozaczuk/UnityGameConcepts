@@ -51,4 +51,37 @@ public struct HexCoordinates
     public override string ToString() => "(" + X.ToString() + ", " + Y.ToString() + ", " + Z.ToString() + ")";
 
     public string ToStringOnSeparateLines() => X.ToString() + "\n" + Y.ToString() + "\n" + Z.ToString();
+
+    public static HexCoordinates FromPosition(Vector3 position)
+    {
+        float x = position.x / (HexMetrics.InnerRadius * 2f);
+        float y = -x;
+
+        // we have to shift as we move along Z. Every two rows we should shift an entire unit to the left
+        float offset = position.z / (HexMetrics.OuterRadius * 3f);
+        x -= offset;
+        y -= offset;
+
+        // Rounding them to integers we should get the coordinates. We derive Z as well and then construct the final coordinates.
+        int iX = Mathf.RoundToInt(x);
+        int iY = Mathf.RoundToInt(y);
+        int iZ = Mathf.RoundToInt(-x - y);
+
+        // rounding error may sometimes occur
+        if (iX + iY + iZ != 0)
+        {
+            // The solution then becomes to discard the coordinate with the largest rounding delta, and reconstruct it from the other two. 
+            // But as we only need X and Z, we don't need to bother with reconstructing Y.
+            float dX = Mathf.Abs(x - iX);
+            float dY = Mathf.Abs(y - iY);
+            float dZ = Mathf.Abs(-x - y - iZ);
+
+            if (dX > dY && dX > dZ)
+                iX = -iY - iZ;
+            else if (dZ > dY)
+                iZ = -iX - iY;
+        }
+
+        return new HexCoordinates(iX, iZ);
+    }
 }
