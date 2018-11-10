@@ -105,7 +105,7 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RenderingLayerMask: 4294967295
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: b53fc9101d5e57440980c773f6e5c54c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -169,6 +169,8 @@ MonoBehaviour:
     type: 2}
   Width: 6
   Height: 6
+  DefaultColor: {r: 1, g: 1, b: 1, a: 1}
+  TouchedColor: {r: 1, g: 0, b: 1, a: 1}
 --- !u!114 &114962268857549652
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -10,11 +10,13 @@ public class HexMesh : MonoBehaviour
 
     // we need mesh collider to make the object clickable
     MeshCollider _meshCollider;
+    List<Color> _colors;
 
     void Awake()
     {
         GetComponent<MeshFilter>().mesh = _hexMesh = new Mesh();
         _meshCollider = gameObject.AddComponent<MeshCollider>();
+        _colors = new List<Color>();
 
         _hexMesh.name = "Hex Mesh";
         _vertices = new List<Vector3>();
@@ -28,6 +30,7 @@ public class HexMesh : MonoBehaviour
         _hexMesh.Clear();
         _vertices.Clear();
         _triangles.Clear();
+        _colors.Clear();
 
         for (int i = 0; i < cells.Length; i++)
             Triangulate(cells[i]);
@@ -35,6 +38,7 @@ public class HexMesh : MonoBehaviour
         _hexMesh.vertices = _vertices.ToArray();
         _hexMesh.triangles = _triangles.ToArray();
         _hexMesh.RecalculateNormals();
+        _hexMesh.colors = _colors.ToArray();
 
         _meshCollider.sharedMesh = _hexMesh;
     }
@@ -43,11 +47,14 @@ public class HexMesh : MonoBehaviour
     {
         Vector3 center = cell.transform.localPosition;
         for (int i = 0; i < 6; i++)
+        {
             AddTriangle(
                 center,
                 center + HexMetrics.corners[i], // The other two vertices are the first and second corners, relative to its center.
                 center + HexMetrics.corners[i + 1]
             );
+            AddTriangleColor(cell.Color);
+        }
     }
     
     void AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
@@ -63,5 +70,12 @@ public class HexMesh : MonoBehaviour
         _triangles.Add(vertexIndex);
         _triangles.Add(vertexIndex + 1);
         _triangles.Add(vertexIndex + 2);
+    }
+
+    void AddTriangleColor(Color color)
+    {
+        _colors.Add(color);
+        _colors.Add(color);
+        _colors.Add(color);
     }
 }
