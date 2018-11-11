@@ -8,7 +8,7 @@ public class HexGrid : MonoBehaviour
     public Color DefaultColor = Color.white;
     public int Width = 6;
     public int Height = 6;
-    
+
     HexMesh _hexMesh;
     HexCell[] _cells;
     Canvas _gridCanvas;
@@ -25,7 +25,7 @@ public class HexGrid : MonoBehaviour
     }
 
     void Start() => _hexMesh.Triangulate(_cells);
-    
+
     void CreateCell(int x, int z, int i)
     {
         Vector3 position;
@@ -71,21 +71,21 @@ public class HexGrid : MonoBehaviour
         }
         // Not every cell is connected to exactly six neighbors. 
         // The cells that form the border of our grid end up with at least two and at most five neighbors.
-        
+
         Text label = Instantiate(CellLabelPrefab);
         label.rectTransform.SetParent(_gridCanvas.transform, false);
         label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
         label.text = cell.Coordinates.ToStringOnSeparateLines();
     }
 
-    public void ColorCell(Vector3 position, Color color)
+    // Get cell returns cell from a given position
+    public HexCell GetCell(Vector3 position)
     {
         position = transform.InverseTransformPoint(position);
         HexCoordinates coordinates = HexCoordinates.FromPosition(position);
-        
         int index = coordinates.X + coordinates.Z * Width + coordinates.Z / 2;
-        HexCell cell = _cells[index];
-        cell.Color = color;
-        _hexMesh.Triangulate(_cells);
+        return _cells[index];
     }
+
+    public void Refresh() => _hexMesh.Triangulate(_cells);
 }

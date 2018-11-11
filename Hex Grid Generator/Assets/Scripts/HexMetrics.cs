@@ -2,6 +2,8 @@
 
 public static class HexMetrics
 {
+    public const float ElevationStep = 5f;
+
     // Hexagon's anatomy
     // the edge's length (so also the distance from the center to any corner) is equal to 10
     // the outer radius is equal to 10 as well

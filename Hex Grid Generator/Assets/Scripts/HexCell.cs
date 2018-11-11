@@ -2,12 +2,28 @@
 
 public class HexCell : MonoBehaviour
 {
-    [SerializeField]
-    HexCell[] _neighbors;
-
+    public int Elevation
+    {
+        get
+        {
+            return _elevation;
+        }
+        set
+        {
+            _elevation = value;
+            Vector3 position = transform.localPosition;
+            position.y = value * HexMetrics.ElevationStep;
+            transform.localPosition = position;
+        }
+    }
+    int _elevation;
+    
     public Color Color;
     public HexCoordinates Coordinates;
 
+    [SerializeField]
+    HexCell[] _neighbors;
+    
     public HexCell GetNeighbor(HexDirection direction) => _neighbors[(int)direction];
 
     public void SetNeighbor(HexDirection direction, HexCell cell)
