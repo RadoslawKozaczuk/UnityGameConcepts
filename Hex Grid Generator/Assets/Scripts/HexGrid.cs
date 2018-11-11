@@ -76,6 +76,8 @@ public class HexGrid : MonoBehaviour
         label.rectTransform.SetParent(_gridCanvas.transform, false);
         label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
         label.text = cell.Coordinates.ToStringOnSeparateLines();
+
+        cell.uiRect = label.rectTransform;
     }
 
     // Get cell returns cell from a given position
