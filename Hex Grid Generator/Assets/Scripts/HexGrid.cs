@@ -71,8 +71,7 @@ public class HexGrid : MonoBehaviour
         }
         // Not every cell is connected to exactly six neighbors. 
         // The cells that form the border of our grid end up with at least two and at most five neighbors.
-
-
+        
         Text label = Instantiate(CellLabelPrefab);
         label.rectTransform.SetParent(_gridCanvas.transform, false);
         label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);

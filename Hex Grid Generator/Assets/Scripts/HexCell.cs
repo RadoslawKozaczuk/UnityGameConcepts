@@ -13,6 +13,6 @@ public class HexCell : MonoBehaviour
     public void SetNeighbor(HexDirection direction, HexCell cell)
     {
         _neighbors[(int)direction] = cell;
-        cell.neighbors[(int)direction.Opposite()] = this;
+        cell._neighbors[(int)direction.Opposite()] = this;
     }
 }

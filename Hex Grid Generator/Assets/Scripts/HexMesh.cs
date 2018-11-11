@@ -46,17 +46,32 @@ public class HexMesh : MonoBehaviour
     void Triangulate(HexCell cell)
     {
         Vector3 center = cell.transform.localPosition;
-        for (int i = 0; i < 6; i++)
-        {
-            AddTriangle(
-                center,
-                center + HexMetrics.corners[i], // The other two vertices are the first and second corners, relative to its center.
-                center + HexMetrics.corners[i + 1]
-            );
-            AddTriangleColor(cell.Color);
-        }
+
+        for (HexDirection d = HexDirection.NE; d <= HexDirection.NW; d++)
+            Triangulate(d, cell);
     }
-    
+
+    void Triangulate(HexDirection direction, HexCell cell)
+    {
+        Vector3 center = cell.transform.localPosition;
+        AddTriangle(
+            center,
+            center + HexMetrics.Corners[(int)direction], // first corner, relative to its center
+            center + HexMetrics.Corners[(int)direction + 1] // first corner, relative to its center
+        );
+
+        // get three neighbours and blend their colors together
+        HexCell prevNeighbor = cell.GetNeighbor(direction.Previous()) ?? cell;
+        HexCell neighbor = cell.GetNeighbor(direction) ?? cell;
+        HexCell nextNeighbor = cell.GetNeighbor(direction.Next()) ?? cell;
+        
+        AddTriangleColor(
+            cell.Color,
+            (cell.Color + prevNeighbor.Color + neighbor.Color) / 3f,
+            (cell.Color + neighbor.Color + nextNeighbor.Color) / 3f
+        );
+    }
+
     void AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         int vertexIndex = _vertices.Count;
@@ -77,5 +92,12 @@ public class HexMesh : MonoBehaviour
         _colors.Add(color);
         _colors.Add(color);
         _colors.Add(color);
+    }
+
+    void AddTriangleColor(Color c1, Color c2, Color c3)
+    {
+        _colors.Add(c1);
+        _colors.Add(c2);
+        _colors.Add(c3);
     }
 }
