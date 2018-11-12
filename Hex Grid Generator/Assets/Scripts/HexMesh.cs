@@ -23,6 +23,61 @@ public class HexMesh : MonoBehaviour
         _triangles = new List<int>();
     }
     
+    // Each corner is connected to three edges, which could be flats, slopes, or cliffs. So there are many possible configurations.
+    void TriangulateCorner(Vector3 bottom, HexCell bottomCell, Vector3 left, 
+        HexCell leftCell, Vector3 right, HexCell rightCell)
+    {
+        HexEdgeType leftEdgeType = bottomCell.GetEdgeType(leftCell);
+        HexEdgeType rightEdgeType = bottomCell.GetEdgeType(rightCell);
+
+        // If both edges are slopes, then we have terraces on both the left and the right side. 
+        // Also, because the bottom cell is the lowest, we know that those slopes go up. 
+        // Furthermore, this means that the left and right cell have the same elevation, so the top edge connection is flat.
+        if (leftEdgeType == HexEdgeType.Slope)
+        {
+            if (rightEdgeType == HexEdgeType.Slope)
+            {
+                TriangulateCornerTerraces(
+                    bottom, bottomCell, left, leftCell, right, rightCell
+                );
+                return;
+            }
+        }
+
+        AddTriangle(bottom, left, right);
+        AddTriangleColor(bottomCell.Color, leftCell.Color, rightCell.Color);
+    }
+
+    void TriangulateCornerTerraces(Vector3 begin, HexCell beginCell, Vector3 left, 
+        HexCell leftCell, Vector3 right, HexCell rightCell)
+    {
+        Vector3 v3 = HexMetrics.TerraceLerp(begin, left, 1);
+        Vector3 v4 = HexMetrics.TerraceLerp(begin, right, 1);
+        Color c3 = HexMetrics.TerraceLerp(beginCell.Color, leftCell.Color, 1);
+        Color c4 = HexMetrics.TerraceLerp(beginCell.Color, rightCell.Color, 1);
+
+        AddTriangle(begin, v3, v4);
+        AddTriangleColor(beginCell.Color, c3, c4);
+
+        for (int i = 2; i < HexMetrics.TerraceSteps; i++)
+        {
+            Vector3 v1 = v3;
+            Vector3 v2 = v4;
+            Color c1 = c3;
+            Color c2 = c4;
+            v3 = HexMetrics.TerraceLerp(begin, left, i);
+            v4 = HexMetrics.TerraceLerp(begin, right, i);
+            c3 = HexMetrics.TerraceLerp(beginCell.Color, leftCell.Color, i);
+            c4 = HexMetrics.TerraceLerp(beginCell.Color, rightCell.Color, i);
+            AddQuad(v1, v2, v3, v4);
+            AddQuadColor(c1, c2, c3, c4);
+        }
+
+
+        AddQuad(v3, v4, left, right);
+        AddQuadColor(c3, c4, leftCell.Color, rightCell.Color);
+    }
+
     public void Triangulate(HexCell[] cells)
     {
         // This method could be invoked at any time, even when cells have already been triangulated earlier.
@@ -79,16 +134,74 @@ public class HexMesh : MonoBehaviour
         Vector3 bridge = HexMetrics.GetBridge(direction);
         Vector3 v3 = v1 + bridge;
         Vector3 v4 = v2 + bridge;
+        v3.y = v4.y = neighbor.Elevation * HexMetrics.ElevationStep;
 
-        AddQuad(v1, v2, v3, v4);
-        AddQuadColor(cell.Color, neighbor.Color);
-
+        if (cell.GetEdgeType(direction) == HexEdgeType.Slope)
+        {
+            TriangulateEdgeTerraces(v1, v2, cell, v3, v4, neighbor);
+        }
+        else
+        {
+            AddQuad(v1, v2, v3, v4);
+            AddQuadColor(cell.Color, neighbor.Color);
+        }
+        
         HexCell nextNeighbor = cell.GetNeighbor(direction.Next());
         if (direction <= HexDirection.E && nextNeighbor != null)
         {
-            AddTriangle(v2, v4, v2 + HexMetrics.GetBridge(direction.Next()));
-            AddTriangleColor(cell.Color, neighbor.Color, nextNeighbor.Color);
+            Vector3 v5 = v2 + HexMetrics.GetBridge(direction.Next());
+            v5.y = nextNeighbor.Elevation * HexMetrics.ElevationStep;
+
+            if (cell.Elevation <= neighbor.Elevation)
+            {
+                if (cell.Elevation <= nextNeighbor.Elevation)
+                {
+                    TriangulateCorner(v2, cell, v4, neighbor, v5, nextNeighbor);
+                }
+                // If the innermost check fails, it means that the next neighbor is the lowest cell. 
+                // We have to rotate the triangle counterclockwise to keep it correctly oriented.
+                else
+                {
+                    TriangulateCorner(v5, nextNeighbor, v2, cell, v4, neighbor);
+                }
+            }
+            else if (neighbor.Elevation <= nextNeighbor.Elevation)
+            {
+                TriangulateCorner(v4, neighbor, v5, nextNeighbor, v2, cell);
+            }
+            else
+            {
+                TriangulateCorner(v5, nextNeighbor, v2, cell, v4, neighbor);
+            }
         }
+    }
+
+    void TriangulateEdgeTerraces(Vector3 beginLeft, Vector3 beginRight, HexCell beginCell, 
+        Vector3 endLeft, Vector3 endRight, HexCell endCell)
+    {
+        Vector3 v3 = HexMetrics.TerraceLerp(beginLeft, endLeft, 1);
+        Vector3 v4 = HexMetrics.TerraceLerp(beginRight, endRight, 1);
+        Color c2 = HexMetrics.TerraceLerp(beginCell.Color, endCell.Color, 1);
+
+        // first step
+        AddQuad(beginLeft, beginRight, v3, v4);
+        AddQuadColor(beginCell.Color, c2);
+
+        for (int i = 2; i < HexMetrics.TerraceSteps; i++)
+        {
+            Vector3 v1 = v3;
+            Vector3 v2 = v4;
+            Color c1 = c2;
+            v3 = HexMetrics.TerraceLerp(beginLeft, endLeft, i);
+            v4 = HexMetrics.TerraceLerp(beginRight, endRight, i);
+            c2 = HexMetrics.TerraceLerp(beginCell.Color, endCell.Color, i);
+            AddQuad(v1, v2, v3, v4);
+            AddQuadColor(c1, c2);
+        }
+        
+        // last step
+        AddQuad(v3, v4, endLeft, endRight);
+        AddQuadColor(c2, endCell.Color);
     }
 
     void AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
@@ -134,13 +247,20 @@ public class HexMesh : MonoBehaviour
         _triangles.Add(vertexIndex + 2);
         _triangles.Add(vertexIndex + 3);
     }
-
-    // colors the rectangle at the border of each of the hex's edge
+    
     void AddQuadColor(Color c1, Color c2)
     {
         _colors.Add(c1);
         _colors.Add(c1);
         _colors.Add(c2);
         _colors.Add(c2);
+    }
+
+    void AddQuadColor(Color c1, Color c2, Color c3, Color c4)
+    {
+        _colors.Add(c1);
+        _colors.Add(c2);
+        _colors.Add(c3);
+        _colors.Add(c4);
     }
 }
