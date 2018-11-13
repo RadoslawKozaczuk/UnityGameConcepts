@@ -19,6 +19,11 @@ public static class HexMetrics
     public const float HorizontalTerraceStepSize = 1f / TerraceSteps;
     public const float VerticalTerraceStepSize = 1f / (TerracesPerSlope + 1);
 
+    public const float CellPerturbStrength = 5f;
+    public const float NoiseScale = 0.003f; // world coordinates need to scall down to match the texture so noise can maintain its coherence
+
+    public static Texture2D NoiseSource;
+
     public static Vector3[] Corners = {
         new Vector3(0f, 0f, OuterRadius),
         new Vector3(InnerRadius, 0f, 0.5f * OuterRadius),
@@ -79,4 +84,9 @@ public static class HexMetrics
         // in all other cases we have a cliff
         return HexEdgeType.Cliff;
     }
+
+    // The samples are produced by sampling the texture using bilinear filtering, using the X and Z world coordinates as UV coordinates. 
+    // As our noise source is 2D, we ignore the third wold coordinate.
+    public static Vector4 SampleNoise(Vector3 position) 
+        => NoiseSource.GetPixelBilinear(position.x * NoiseScale, position.z * NoiseScale);
 }

@@ -283,6 +283,11 @@ Prefab:
       propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_FloatArgument
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114548039004823198, guid: 63912e751aaa3ce4ab1c6865f627b257,
+        type: 2}
+      propertyPath: NoiseSource
+      value: 
+      objectReference: {fileID: 2800000, guid: af333042cb76030418e6d6bf2e0050a5, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 63912e751aaa3ce4ab1c6865f627b257, type: 2}
   m_IsPrefabAsset: 0
