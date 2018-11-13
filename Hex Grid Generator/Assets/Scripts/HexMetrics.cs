@@ -2,6 +2,8 @@
 
 public static class HexMetrics
 {
+    public const int ChunkSizeX = 5, ChunkSizeZ = 5;
+
     public const float ElevationStep = 3f;
 
     // Hexagon's anatomy
