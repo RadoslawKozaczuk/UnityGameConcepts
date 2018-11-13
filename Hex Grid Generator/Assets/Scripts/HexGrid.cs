@@ -81,6 +81,8 @@ public class HexGrid : MonoBehaviour
         label.text = cell.Coordinates.ToStringOnSeparateLines();
 
         cell.uiRect = label.rectTransform;
+
+        cell.Elevation = 0;
     }
 
     // Get cell returns cell from a given position

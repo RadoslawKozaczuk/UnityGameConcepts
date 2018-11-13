@@ -2,7 +2,7 @@
 
 public static class HexMetrics
 {
-    public const float ElevationStep = 5f;
+    public const float ElevationStep = 3f;
 
     // Hexagon's anatomy
     // the edge's length (so also the distance from the center to any corner) is equal to 10
@@ -11,7 +11,7 @@ public static class HexMetrics
     // the inner radius is equal to sqrt(3)/2 times the outer radius
     public const float InnerRadius = OuterRadius * 0.866025404f;
 
-    public const float SolidFactor = 0.75f;
+    public const float SolidFactor = 0.8f;
     public const float BlendFactor = 1f - SolidFactor;
 
     public const int TerracesPerSlope = 2;
@@ -19,8 +19,9 @@ public static class HexMetrics
     public const float HorizontalTerraceStepSize = 1f / TerraceSteps;
     public const float VerticalTerraceStepSize = 1f / (TerracesPerSlope + 1);
 
-    public const float CellPerturbStrength = 5f;
+    public const float CellPerturbStrength = 4f;
     public const float NoiseScale = 0.003f; // world coordinates need to scall down to match the texture so noise can maintain its coherence
+    public const float ElevationPerturbStrength = 1.5f;
 
     public static Texture2D NoiseSource;
 
