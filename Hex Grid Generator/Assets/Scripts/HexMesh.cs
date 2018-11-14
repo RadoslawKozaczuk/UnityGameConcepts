@@ -5,12 +5,16 @@ using System.Collections.Generic;
 public class HexMesh : MonoBehaviour
 {
     Mesh _hexMesh;
-    List<Vector3> _vertices;
-    List<int> _triangles;
+
+    // The lists that HexMesh uses are effectively temporary buffers. 
+    // They are only used during triangulation. And chunks are triangulated one at a time. 
+    // So we really only need one set of lists, not one set per hex mesh object therefore they can be static.
+    static List<Vector3> _vertices = new List<Vector3>();
+    static List<Color> _colors = new List<Color>();
+    static List<int> _triangles = new List<int>();
 
     // we need mesh collider to make the object clickable
     MeshCollider _meshCollider;
-    List<Color> _colors;
 
     void Awake()
     {
@@ -66,38 +70,30 @@ public class HexMesh : MonoBehaviour
         if (leftEdgeType == HexEdgeType.Slope)
         {
             if (rightEdgeType == HexEdgeType.Slope)
-            {
                 TriangulateCornerTerraces(bottom, bottomCell, left, leftCell, right, rightCell);
-                return;
-            }
-            if (rightEdgeType == HexEdgeType.Flat)
-            {
+            else if (rightEdgeType == HexEdgeType.Flat)
                 TriangulateCornerTerraces(left, leftCell, right, rightCell, bottom, bottomCell);
-                return;
-            }
-            TriangulateCornerTerracesCliff(bottom, bottomCell, left, leftCell, right, rightCell);
+            else 
+                TriangulateCornerTerracesCliff(bottom, bottomCell, left, leftCell, right, rightCell);
+
             return;
         }
-        if (rightEdgeType == HexEdgeType.Slope)
+        else if (rightEdgeType == HexEdgeType.Slope)
         {
             if (leftEdgeType == HexEdgeType.Flat)
-            {
                 TriangulateCornerTerraces(right, rightCell, bottom, bottomCell, left, leftCell);
-                return;
-            }
-            TriangulateCornerCliffTerraces(bottom, bottomCell, left, leftCell, right, rightCell);
+            else
+                TriangulateCornerCliffTerraces(bottom, bottomCell, left, leftCell, right, rightCell);
+
             return;
         }
-        if (leftCell.GetEdgeType(rightCell) == HexEdgeType.Slope)
+        else if (leftCell.GetEdgeType(rightCell) == HexEdgeType.Slope)
         {
             if (leftCell.Elevation < rightCell.Elevation)
-            {
                 TriangulateCornerCliffTerraces(right, rightCell, bottom, bottomCell, left, leftCell);
-            }
             else
-            {
                 TriangulateCornerTerracesCliff(left, leftCell, right, rightCell, bottom, bottomCell);
-            }
+
             return;
         }
 
@@ -129,8 +125,7 @@ public class HexMesh : MonoBehaviour
             AddQuad(v1, v2, v3, v4);
             AddQuadColor(c1, c2, c3, c4);
         }
-
-
+        
         AddQuad(v3, v4, left, right);
         AddQuadColor(c3, c4, leftCell.Color, rightCell.Color);
     }
@@ -274,13 +269,9 @@ public class HexMesh : MonoBehaviour
         var edgeEnd = new EdgeVertices(edgeBegin.v1 + bridge, edgeBegin.v4 + bridge);
 
         if (cell.GetEdgeType(direction) == HexEdgeType.Slope)
-        {
             TriangulateEdgeTerraces(edgeBegin, cell, edgeEnd, neighbor);
-        }
         else
-        {
             TriangulateEdgeStrip(edgeBegin, cell.Color, edgeEnd, neighbor.Color);
-        }
         
         HexCell nextNeighbor = cell.GetNeighbor(direction.Next());
         if (direction <= HexDirection.E && nextNeighbor != null)

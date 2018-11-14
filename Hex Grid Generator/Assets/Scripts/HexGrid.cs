@@ -100,7 +100,7 @@ public class HexGrid : MonoBehaviour
         label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
         label.text = cell.Coordinates.ToStringOnSeparateLines();
 
-        cell.uiRect = label.rectTransform;
+        cell.UiRect = label.rectTransform;
         cell.Elevation = 0;
 
         AddCellToChunk(x, z, cell);

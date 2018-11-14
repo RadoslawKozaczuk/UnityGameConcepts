@@ -12,13 +12,20 @@ public class HexGridChunk : MonoBehaviour
         _hexMesh = GetComponentInChildren<HexMesh>();
         _cells = new HexCell[HexMetrics.ChunkSizeX * HexMetrics.ChunkSizeZ];
     }
+    
+    void LateUpdate()
+    {
+        _hexMesh.Triangulate(_cells);
+        enabled = false;
+    }
 
-    void Start() => _hexMesh.Triangulate(_cells);
+    public void Refresh() => enabled = true;
 
     public void AddCell(int index, HexCell cell)
     {
         _cells[index] = cell;
+        cell.Chunk = this;
         cell.transform.SetParent(transform, false);
-        cell.uiRect.SetParent(_gridCanvas.transform, false);
+        cell.UiRect.SetParent(_gridCanvas.transform, false);
     }
 }
