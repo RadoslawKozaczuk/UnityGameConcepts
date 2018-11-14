@@ -199,7 +199,7 @@ Prefab:
     - target: {fileID: 224270933182703476, guid: 78aa45da9351aaf498391ee1c1e65b16,
         type: 2}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 224270933182703476, guid: 78aa45da9351aaf498391ee1c1e65b16,
         type: 2}
@@ -229,7 +229,7 @@ Prefab:
     - target: {fileID: 224270933182703476, guid: 78aa45da9351aaf498391ee1c1e65b16,
         type: 2}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 224270933182703476, guid: 78aa45da9351aaf498391ee1c1e65b16,
         type: 2}
@@ -276,6 +276,11 @@ Prefab:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 114704515639462068, guid: 78aa45da9351aaf498391ee1c1e65b16,
+        type: 2}
+      propertyPath: _grid
+      value: 
+      objectReference: {fileID: 801535941}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 78aa45da9351aaf498391ee1c1e65b16, type: 2}
   m_IsPrefabAsset: 0
@@ -332,7 +337,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_FirstSelected: {fileID: 0}
-  m_sendNavigationEvents: 1
+  m_sendNavigationEvents: 0
   m_DragThreshold: 10
 --- !u!4 &1441215939
 Transform:
