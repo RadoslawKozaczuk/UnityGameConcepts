@@ -53,7 +53,7 @@ public class HexMapCamera : MonoBehaviour
     void AdjustPosition(float xDelta, float zDelta)
     {
         // vector need to be normalized in otder to prevent the camera moving faster diagonally
-        var direction = new Vector3(xDelta, 0f, zDelta).normalized;
+        var direction = transform.localRotation * new Vector3(xDelta, 0f, zDelta).normalized;
 
         // slow the camera movement proportionally to the key's delays
         float damping = Mathf.Max(Mathf.Abs(xDelta), Mathf.Abs(zDelta));

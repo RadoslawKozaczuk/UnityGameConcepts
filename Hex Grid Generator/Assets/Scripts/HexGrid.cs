@@ -28,6 +28,13 @@ public class HexGrid : MonoBehaviour
     
     void OnEnable() => HexMetrics.NoiseSource = NoiseSource;
 
+    public HexCell GetCell(HexCoordinates coordinates)
+    {
+        int z = coordinates.Z;
+        int x = coordinates.X + z / 2;
+        return _cells[x + z * _cellCountX];
+    }
+
     void CreateChunks()
     {
         _chunks = new HexGridChunk[ChunkCountX * ChunkCountZ];

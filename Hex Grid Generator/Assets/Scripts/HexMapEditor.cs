@@ -3,10 +3,11 @@ using UnityEngine.EventSystems;
 
 public class HexMapEditor : MonoBehaviour
 {
-    public Color[] Colors;
-    public HexGrid HexGrid;
-    private Color _activeColor;
-    int _activeElevation;
+    [SerializeField] Color[] _colors;
+    [SerializeField] HexGrid _hexGrid;
+    Color _activeColor;
+    int _activeElevation, _brushSize;
+    bool _applyColor, _applyElevation = true;
 
     void Awake() => SelectColor(0);
 
@@ -28,15 +29,49 @@ public class HexMapEditor : MonoBehaviour
         Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(inputRay, out hit))
-            EditCell(HexGrid.GetCell(hit.point));
+            EditCells(_hexGrid.GetCell(hit.point));
+    }
+
+    void EditCells(HexCell center)
+    {
+        int centerX = center.Coordinates.X;
+        int centerZ = center.Coordinates.Z;
+
+        for (int r = 0, z = centerZ - _brushSize; z <= centerZ; z++, r++)
+            for (int x = centerX - r; x <= centerX + _brushSize; x++)
+                EditCell(_hexGrid.GetCell(new HexCoordinates(x, z)));
+
+        for (int r = 0, z = centerZ + _brushSize; z > centerZ; z--, r++)
+            for (int x = centerX - _brushSize; x <= centerX + r; x++)
+                EditCell(_hexGrid.GetCell(new HexCoordinates(x, z)));
     }
 
     void EditCell(HexCell cell)
     {
-        cell.Color = _activeColor;
-        cell.Elevation = _activeElevation;
+        if (_applyColor)
+            cell.Color = _activeColor;
+
+        if (_applyElevation)
+            cell.Elevation = _activeElevation;
     }
 
-    public void SelectColor(int index) => _activeColor = Colors[index];
-    public void SetElevation(float elevation) => _activeElevation = (int)elevation;
+    public void SelectColor(int index)
+    {
+        _applyColor = index >= 0;
+        if (_applyColor)
+            _activeColor = _colors[index];
+    }
+
+    public void SetElevation(float elevation)
+    {
+        if (_applyColor)
+            _activeElevation = (int)elevation;
+    }
+
+    public void SetApplyElevation(bool toggle) => _applyElevation = toggle;
+
+    public void SetBrushSize(float size)
+    {
+        _brushSize = (int)size;
+    }
 }
