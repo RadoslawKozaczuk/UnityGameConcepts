@@ -7,7 +7,7 @@ public class HexMapEditor : MonoBehaviour
     [SerializeField] HexGrid _hexGrid;
     Color _activeColor;
     int _activeElevation, _brushSize;
-    bool _applyColor, _applyElevation = true;
+    bool _applyColor = false, _applyElevation = true;
 
     void Awake() => SelectColor(0);
 
@@ -48,11 +48,14 @@ public class HexMapEditor : MonoBehaviour
 
     void EditCell(HexCell cell)
     {
-        if (_applyColor)
-            cell.Color = _activeColor;
+        if (cell)
+        {
+            if (_applyColor)
+                cell.Color = _activeColor;
 
-        if (_applyElevation)
-            cell.Elevation = _activeElevation;
+            if (_applyElevation)
+                cell.Elevation = _activeElevation;
+        }
     }
 
     public void SelectColor(int index)
@@ -70,8 +73,7 @@ public class HexMapEditor : MonoBehaviour
 
     public void SetApplyElevation(bool toggle) => _applyElevation = toggle;
 
-    public void SetBrushSize(float size)
-    {
-        _brushSize = (int)size;
-    }
+    public void SetBrushSize(float size) => _brushSize = (int)size;
+
+    public void ShowUI(bool visible) => _hexGrid.ShowUI(visible);
 }

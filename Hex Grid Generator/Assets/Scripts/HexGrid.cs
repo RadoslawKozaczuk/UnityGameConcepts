@@ -31,8 +31,18 @@ public class HexGrid : MonoBehaviour
     public HexCell GetCell(HexCoordinates coordinates)
     {
         int z = coordinates.Z;
+        if (z < 0 || z >= _cellCountZ) return null;
+
         int x = coordinates.X + z / 2;
+        if (x < 0 || x >= _cellCountX) return null;
+        
         return _cells[x + z * _cellCountX];
+    }
+
+    public void ShowUI(bool visible)
+    {
+        for (int i = 0; i < _chunks.Length; i++)
+            _chunks[i].ShowUI(visible);
     }
 
     void CreateChunks()
