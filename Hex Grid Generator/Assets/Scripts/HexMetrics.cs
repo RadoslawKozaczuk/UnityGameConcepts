@@ -25,6 +25,9 @@ public static class HexMetrics
     public const float NoiseScale = 0.003f; // world coordinates need to scall down to match the texture so noise can maintain its coherence
     public const float ElevationPerturbStrength = 1.5f;
 
+    // river related stuff
+    public const float StreamBedElevationOffset = -1f;
+
     public static Texture2D NoiseSource;
 
     public static Vector3[] Corners = {

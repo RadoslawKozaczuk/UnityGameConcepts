@@ -454,22 +454,22 @@ Prefab:
       propertyPath: _hexGrid
       value: 
       objectReference: {fileID: 801535941}
-    - target: {fileID: 224643564459948318, guid: a6718c577ab82e84d9e38c84f531e6f8,
-        type: 2}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224429877179689004, guid: a6718c577ab82e84d9e38c84f531e6f8,
-        type: 2}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 224140064750671256, guid: a6718c577ab82e84d9e38c84f531e6f8,
         type: 2}
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 224367347822138152, guid: a6718c577ab82e84d9e38c84f531e6f8,
+        type: 2}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224643564459948318, guid: a6718c577ab82e84d9e38c84f531e6f8,
+        type: 2}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224429877179689004, guid: a6718c577ab82e84d9e38c84f531e6f8,
         type: 2}
       propertyPath: m_AnchorMax.y
       value: 0

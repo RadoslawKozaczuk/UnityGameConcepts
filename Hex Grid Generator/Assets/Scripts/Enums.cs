@@ -7,3 +7,8 @@ public enum HexEdgeType
 {
     Flat, Slope, Cliff
 }
+
+public enum RiverToggle
+{
+    Ignore, Add, Remove
+}

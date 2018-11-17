@@ -3,14 +3,15 @@
 public struct EdgeVertices
 {
     // vertices are ordered clockwise along the cell's edge
-    public Vector3 v1, v2, v3, v4;
+    public Vector3 v1, v2, v3, v4, v5; // v3 is used by rivers
 
     public EdgeVertices(Vector3 startPoint, Vector3 endPoint)
     {
         v1 = startPoint;
-        v2 = Vector3.Lerp(startPoint, endPoint, 1f / 3f);
-        v3 = Vector3.Lerp(startPoint, endPoint, 2f / 3f);
-        v4 = endPoint;
+        v2 = Vector3.Lerp(startPoint, endPoint, 0.25f);
+        v3 = Vector3.Lerp(startPoint, endPoint, 0.5f);
+        v4 = Vector3.Lerp(startPoint, endPoint, 0.75f);
+        v5 = endPoint;
     }
     
     /// <summary>
@@ -23,6 +24,7 @@ public struct EdgeVertices
         result.v2 = HexMetrics.TerraceLerp(begin.v2, end.v2, step);
         result.v3 = HexMetrics.TerraceLerp(begin.v3, end.v3, step);
         result.v4 = HexMetrics.TerraceLerp(begin.v4, end.v4, step);
+        result.v5 = HexMetrics.TerraceLerp(begin.v5, end.v5, step);
         return result;
     }
 }

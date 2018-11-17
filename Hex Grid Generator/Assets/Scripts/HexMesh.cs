@@ -225,17 +225,17 @@ public class HexMesh : MonoBehaviour
             center + HexMetrics.GetSecondSolidCorner(direction)
         );
 
+        if (cell.HasRiverThroughEdge(direction))
+            e.v3.y = cell.StreamBedY;
+
         // hexagon itself is made of 12 triangles to add some variety
         TriangulateEdgeFan(center, e, cell.Color);
 
         if (direction == HexDirection.NE)
-        {
             TriangulateConnection(direction, cell, e);
-        }
+
         if (direction <= HexDirection.SE)
-        {
             TriangulateConnection(direction, cell, e);
-        }
     }
 
     void TriangulateEdgeFan(Vector3 center, EdgeVertices edge, Color color)
@@ -245,6 +245,8 @@ public class HexMesh : MonoBehaviour
         AddTriangle(center, edge.v2, edge.v3);
         AddTriangleColor(color);
         AddTriangle(center, edge.v3, edge.v4);
+        AddTriangleColor(color);
+        AddTriangle(center, edge.v4, edge.v5);
         AddTriangleColor(color);
     }
 
@@ -256,6 +258,8 @@ public class HexMesh : MonoBehaviour
         AddQuadColor(c1, c2);
         AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
         AddQuadColor(c1, c2);
+        AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
+        AddQuadColor(c1, c2);
     }
 
     // Every two hexagons are connected by a single rectangular bridge. And every three hexagons are connected by a single triangle.
@@ -266,7 +270,7 @@ public class HexMesh : MonoBehaviour
         
         Vector3 bridge = HexMetrics.GetBridge(direction);
         bridge.y = neighbor.Position.y - cell.Position.y;
-        var edgeEnd = new EdgeVertices(edgeBegin.v1 + bridge, edgeBegin.v4 + bridge);
+        var edgeEnd = new EdgeVertices(edgeBegin.v1 + bridge, edgeBegin.v5 + bridge);
 
         if (cell.GetEdgeType(direction) == HexEdgeType.Slope)
             TriangulateEdgeTerraces(edgeBegin, cell, edgeEnd, neighbor);
@@ -276,29 +280,29 @@ public class HexMesh : MonoBehaviour
         HexCell nextNeighbor = cell.GetNeighbor(direction.Next());
         if (direction <= HexDirection.E && nextNeighbor != null)
         {
-            Vector3 v5 = edgeBegin.v4 + HexMetrics.GetBridge(direction.Next());
+            Vector3 v5 = edgeBegin.v5 + HexMetrics.GetBridge(direction.Next());
             v5.y = nextNeighbor.Position.y;
 
             if (cell.Elevation <= neighbor.Elevation)
             {
                 if (cell.Elevation <= nextNeighbor.Elevation)
                 {
-                    TriangulateCorner(edgeBegin.v4, cell, edgeEnd.v4, neighbor, v5, nextNeighbor);
+                    TriangulateCorner(edgeBegin.v5, cell, edgeEnd.v5, neighbor, v5, nextNeighbor);
                 }
                 // If the innermost check fails, it means that the next neighbor is the lowest cell. 
                 // We have to rotate the triangle counterclockwise to keep it correctly oriented.
                 else
                 {
-                    TriangulateCorner(v5, nextNeighbor, edgeBegin.v4, cell, edgeEnd.v4, neighbor);
+                    TriangulateCorner(v5, nextNeighbor, edgeBegin.v5, cell, edgeEnd.v5, neighbor);
                 }
             }
             else if (neighbor.Elevation <= nextNeighbor.Elevation)
             {
-                TriangulateCorner(edgeEnd.v4, neighbor, v5, nextNeighbor, edgeBegin.v4, cell);
+                TriangulateCorner(edgeEnd.v5, neighbor, v5, nextNeighbor, edgeBegin.v5, cell);
             }
             else
             {
-                TriangulateCorner(v5, nextNeighbor, edgeBegin.v4, cell, edgeEnd.v4, neighbor);
+                TriangulateCorner(v5, nextNeighbor, edgeBegin.v5, cell, edgeEnd.v5, neighbor);
             }
         }
     }
