@@ -87,7 +87,7 @@ public class HexGrid : MonoBehaviour
         // As we go through the cells row by row, left to right, we know which cells have already been created. 
         // Those are the cells that we can connect to.
         if (x > 0)
-            cell.SetNeighbor(HexDirection.W, _cells[i - 1]);
+            cell.SetNeighbor(HexDirection.West, _cells[i - 1]);
         // We have two more bidirectional connections to make.
         // As these are between different grid rows, we can only connect with the previous row.
         // This means that we have to skip the first row entirely.
@@ -97,17 +97,17 @@ public class HexGrid : MonoBehaviour
             // Let's first deal with the even rows. As all cells in such rows have a SE neighbor, we can connect to those.
             if ((z & 1) == 0) // bitwise and used as a mask to get an even number (even number always has 0 as last number)
             {
-                cell.SetNeighbor(HexDirection.SE, _cells[i - _cellCountX]);
+                cell.SetNeighbor(HexDirection.SouthEast, _cells[i - _cellCountX]);
                 // We can connect to the SW neighbors as well. Except for the first cell in each row, as it doesn't have one.
                 if (x > 0)
-                    cell.SetNeighbor(HexDirection.SW, _cells[i - _cellCountX - 1]);
+                    cell.SetNeighbor(HexDirection.SouthWest, _cells[i - _cellCountX - 1]);
             }
             // The odds rows follow the same logic, but mirrored. Once that's done, all neighbors in our grid are connected.
             else
             {
-                cell.SetNeighbor(HexDirection.SW, _cells[i - _cellCountX]);
+                cell.SetNeighbor(HexDirection.SouthWest, _cells[i - _cellCountX]);
                 if (x < _cellCountX - 1)
-                    cell.SetNeighbor(HexDirection.SE, _cells[i - _cellCountX + 1]);
+                    cell.SetNeighbor(HexDirection.SouthEast, _cells[i - _cellCountX + 1]);
             }
         }
         // Not every cell is connected to exactly six neighbors. 

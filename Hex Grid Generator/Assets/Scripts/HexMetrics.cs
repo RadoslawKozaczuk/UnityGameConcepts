@@ -3,7 +3,6 @@
 public static class HexMetrics
 {
     public const int ChunkSizeX = 5, ChunkSizeZ = 5;
-
     public const float ElevationStep = 3f;
 
     // Hexagon's anatomy
@@ -12,6 +11,8 @@ public static class HexMetrics
     public const float OuterRadius = 10f;
     // the inner radius is equal to sqrt(3)/2 times the outer radius
     public const float InnerRadius = OuterRadius * 0.866025404f;
+    public const float OuterToInner = 0.866025404f;
+    public const float InnerToOuter = 1f / OuterToInner;
 
     public const float SolidFactor = 0.8f;
     public const float BlendFactor = 1f - SolidFactor;
@@ -21,12 +22,14 @@ public static class HexMetrics
     public const float HorizontalTerraceStepSize = 1f / TerraceSteps;
     public const float VerticalTerraceStepSize = 1f / (TerracesPerSlope + 1);
 
-    public const float CellPerturbStrength = 4f;
+    public const float CellPerturbStrength = 0f; //4f;
     public const float NoiseScale = 0.003f; // world coordinates need to scall down to match the texture so noise can maintain its coherence
-    public const float ElevationPerturbStrength = 1.5f;
+    public static float ElevationPerturbStrength = 1.5f;
+    public static bool ElevationPerturbFlag = true;
 
     // river related stuff
-    public const float StreamBedElevationOffset = -1f;
+    public const float StreamBedElevationOffset = -1.75f;
+    public const float RiverSurfaceElevationOffset = -0.5f;
 
     public static Texture2D NoiseSource;
 
@@ -66,7 +69,7 @@ public static class HexMetrics
 
         return a;
     }
-
+    
     public static Color TerraceLerp(Color a, Color b, int step)
     {
         float h = step * HorizontalTerraceStepSize;
@@ -76,16 +79,12 @@ public static class HexMetrics
     public static HexEdgeType GetEdgeType(int elevation1, int elevation2)
     {
         if (elevation1 == elevation2)
-        {
             return HexEdgeType.Flat;
-        }
 
         // If the level difference is exactly one step, then we have a slope. It doesn't matter whether the slope goes up or down.
         int delta = elevation2 - elevation1;
         if (delta == 1 || delta == -1)
-        {
             return HexEdgeType.Slope;
-        }
 
         // in all other cases we have a cliff
         return HexEdgeType.Cliff;
@@ -95,4 +94,17 @@ public static class HexMetrics
     // As our noise source is 2D, we ignore the third wold coordinate.
     public static Vector4 SampleNoise(Vector3 position) 
         => NoiseSource.GetPixelBilinear(position.x * NoiseScale, position.z * NoiseScale);
+
+    public static Vector3 GetSolidEdgeMiddle(HexDirection direction) 
+        => (Corners[(int)direction] + Corners[(int)direction + 1]) * (0.5f * SolidFactor);
+
+    // modify the position of the point accordingly to the noise function
+    public static Vector3 Perturb(Vector3 position)
+    {
+        Vector4 sample = SampleNoise(position);
+        position.x += (sample.x * 2f - 1f) * CellPerturbStrength;
+        position.y += (sample.y * 2f - 1f) * CellPerturbStrength;
+        position.z += (sample.z * 2f - 1f) * CellPerturbStrength;
+        return position;
+    }
 }

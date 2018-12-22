@@ -1,11 +1,13 @@
 ﻿public enum HexDirection
 {
-    NE, E, SE, SW, W, NW
+    NorthEast, East, SouthEast, SouthWest, West, NorthWest
 }
 
 public enum HexEdgeType
 {
-    Flat, Slope, Cliff
+    Flat,  // same elevation
+    Slope, // elevation difference is 1
+    Cliff  // elevation difference is 2 or more
 }
 
 public enum RiverToggle

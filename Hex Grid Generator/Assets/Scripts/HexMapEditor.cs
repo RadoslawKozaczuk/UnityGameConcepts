@@ -26,7 +26,11 @@ public class HexMapEditor : MonoBehaviour
             _previousCell = null;
     }
 
-    public void SetRiverMode(int mode) => _riverMode = (RiverToggle)mode;
+    public void SetRiverMode(int mode)
+    {
+        _riverMode = (RiverToggle)mode;
+        Debug.Log("river mode: " + (int)_riverMode);
+    }
 
     void HandleInput()
     {
@@ -48,11 +52,12 @@ public class HexMapEditor : MonoBehaviour
 
     void ValidateDrag(HexCell currentCell)
     {
-        for (_dragDirection = HexDirection.NE; _dragDirection <= HexDirection.NW; _dragDirection++)
+        for (_dragDirection = HexDirection.NorthEast; _dragDirection <= HexDirection.NorthWest; _dragDirection++)
         {
             if (_previousCell.GetNeighbor(_dragDirection) == currentCell)
             {
                 _isDrag = true;
+                Debug.Log("Drag direction: " + _dragDirection.ToString());
                 return;
             }
         }
@@ -86,11 +91,7 @@ public class HexMapEditor : MonoBehaviour
             if (_riverMode == RiverToggle.Remove)
                 cell.RemoveRiver();
             else if (_isDrag && _riverMode == RiverToggle.Add)
-            {
-                HexCell otherCell = cell.GetNeighbor(_dragDirection.Opposite());
-                if (otherCell)
-                    otherCell.SetOutgoingRiver(_dragDirection);
-            }
+                cell.SetIncomingRiver(_dragDirection.Opposite());
         }
     }
 
@@ -112,4 +113,11 @@ public class HexMapEditor : MonoBehaviour
     public void SetBrushSize(float size) => _brushSize = (int)size;
 
     public void ShowUI(bool visible) => _hexGrid.ShowUI(visible);
+
+    public void ToggleTerrainPerturbation() => HexMetrics.ElevationPerturbFlag = !HexMetrics.ElevationPerturbFlag;
+
+    public void RecreateMap()
+    {
+
+    }
 }
