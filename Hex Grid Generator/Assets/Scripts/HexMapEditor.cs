@@ -10,7 +10,7 @@ public class HexMapEditor : MonoBehaviour
     int _activeElevation, _brushSize;
     bool _applyColor = false, _applyElevation = true, _isDrag;
     HexDirection _dragDirection;
-    RiverToggle _riverMode;
+    EditModes _riverMode, _roadMode;
 
     void Awake() => SelectColor(0);
 
@@ -28,15 +28,14 @@ public class HexMapEditor : MonoBehaviour
 
     public void SetRiverMode(int mode)
     {
-        _riverMode = (RiverToggle)mode;
+        _riverMode = (EditModes)mode;
         Debug.Log("river mode: " + (int)_riverMode);
     }
 
     void HandleInput()
     {
         Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        if (Physics.Raycast(inputRay, out hit))
+        if (Physics.Raycast(inputRay, out RaycastHit hit))
         {
             HexCell currentCell = _hexGrid.GetCell(hit.point);
             if (_previousCell && _previousCell != currentCell)
@@ -88,10 +87,24 @@ public class HexMapEditor : MonoBehaviour
             if (_applyElevation)
                 cell.Elevation = _activeElevation;
 
-            if (_riverMode == RiverToggle.Remove)
+            if (_riverMode == EditModes.Remove)
                 cell.RemoveRiver();
-            else if (_isDrag && _riverMode == RiverToggle.Add)
-                cell.SetIncomingRiver(_dragDirection.Opposite());
+
+            if (_roadMode == EditModes.Remove)
+                cell.RemoveRoads();
+
+            if (_isDrag)
+            {
+                var oppositeDir = _dragDirection.Opposite();
+                HexCell otherCell = cell.GetNeighbor(oppositeDir);
+                if (otherCell)
+                {
+                    if (_riverMode == EditModes.Add)
+                        cell.SetIncomingRiver(oppositeDir, otherCell);
+                    if (_roadMode == EditModes.Add)
+                        otherCell.AddRoad(_dragDirection);
+                }
+            }
         }
     }
 
@@ -120,4 +133,6 @@ public class HexMapEditor : MonoBehaviour
     {
 
     }
+
+    public void SetRoadMode(int mode) => _roadMode = (EditModes)mode;
 }

@@ -10,7 +10,7 @@ public enum HexEdgeType
     Cliff  // elevation difference is 2 or more
 }
 
-public enum RiverToggle
+public enum EditModes
 {
     Ignore, Add, Remove
 }
