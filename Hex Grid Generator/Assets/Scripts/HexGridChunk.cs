@@ -2,7 +2,7 @@
 
 public class HexGridChunk : MonoBehaviour
 {
-    public HexMesh Terrain, Rivers, Roads;
+    public HexMesh Terrain, Rivers, Roads, Water;
     HexCell[] _cells;
     Canvas _gridCanvas;
 
@@ -39,6 +39,7 @@ public class HexGridChunk : MonoBehaviour
         Terrain.Clear();
         Rivers.Clear();
         Roads.Clear();
+        Water.Clear();
 
         for (int i = 0; i < _cells.Length; i++)
             TriangulateCell(_cells[i]);
@@ -46,6 +47,7 @@ public class HexGridChunk : MonoBehaviour
         Terrain.Apply();
         Rivers.Apply();
         Roads.Apply();
+        Water.Apply();
     }
 
     // Each corner is connected to three edges, which could be flats, slopes, or cliffs. So there are many possible configurations.
@@ -241,6 +243,9 @@ public class HexGridChunk : MonoBehaviour
 
             if (direction <= HexDirection.SouthEast)
                 TriangulateConnection(direction, cell, edgeVertices);
+
+            if (cell.IsUnderwater)
+                TriangulateWater(direction, cell, center);
         }
     }
 
@@ -624,14 +629,14 @@ public class HexGridChunk : MonoBehaviour
                 middle = direction.Previous();
             else
                 middle = direction;
-            
+
             // get rid off roads on the other side of the river
             if (!cell.HasRoadThroughEdge(middle) && !cell.HasRoadThroughEdge(middle.Previous()) && !cell.HasRoadThroughEdge(middle.Next()))
                 return;
 
             roadCenter += HexMetrics.GetSolidEdgeMiddle(middle) * 0.25f;
         }
-        
+
         Vector3 mL = Vector3.Lerp(roadCenter, e.V1, interpolators.x);
         Vector3 mR = Vector3.Lerp(roadCenter, e.V5, interpolators.y);
         TriangulateRoad(roadCenter, mL, mR, e, hasRoadThroughEdge);
@@ -641,5 +646,35 @@ public class HexGridChunk : MonoBehaviour
             TriangulateRoadEdge(roadCenter, center, mL);
         if (nextHasRiver)
             TriangulateRoadEdge(roadCenter, mR, center);
+    }
+
+    void TriangulateWater(HexDirection direction, HexCell cell, Vector3 center)
+    {
+        center.y = cell.WaterSurfaceY;
+        Vector3 c1 = center + HexMetrics.GetFirstSolidCorner(direction);
+        Vector3 c2 = center + HexMetrics.GetSecondSolidCorner(direction);
+        Water.AddTriangle(center, c1, c2);
+
+        // water connection is just a single quad
+        if (direction <= HexDirection.SouthEast)
+        {
+            HexCell neighbor = cell.GetNeighbor(direction);
+            if (neighbor == null || !neighbor.IsUnderwater)
+                return;
+
+            Vector3 bridge = HexMetrics.GetBridge(direction);
+            Vector3 e1 = c1 + bridge;
+            Vector3 e2 = c2 + bridge;
+            Water.AddQuad(c1, c2, e1, e2);
+
+            // connection triangle
+            if (direction <= HexDirection.East)
+            {
+                HexCell nextNeighbor = cell.GetNeighbor(direction.Next());
+                if (nextNeighbor == null || !nextNeighbor.IsUnderwater)
+                    return;
+                Water.AddTriangle(c2, e2, c2 + HexMetrics.GetBridge(direction.Next()));
+            }
+        }
     }
 }

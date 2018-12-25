@@ -7,8 +7,8 @@ public class HexMapEditor : MonoBehaviour
     [SerializeField] HexGrid _hexGrid;
     HexCell _previousCell;
     Color _activeColor;
-    int _activeElevation, _brushSize;
-    bool _applyColor = false, _applyElevation = true, _isDrag;
+    int _activeElevation, _brushSize, _activeWaterLevel;
+    bool _applyColor = false, _applyElevation = true, _applyWaterLevel = true, _isDrag;
     HexDirection _dragDirection;
     EditModes _riverMode, _roadMode;
 
@@ -93,6 +93,9 @@ public class HexMapEditor : MonoBehaviour
             if (_roadMode == EditModes.Remove)
                 cell.RemoveRoads();
 
+            if (_applyWaterLevel)
+                cell.WaterLevel = _activeWaterLevel;
+
             if (_isDrag)
             {
                 var oppositeDir = _dragDirection.Opposite();
@@ -135,4 +138,14 @@ public class HexMapEditor : MonoBehaviour
     }
 
     public void SetRoadMode(int mode) => _roadMode = (EditModes)mode;
+
+    public void SetApplyWaterLevel(bool toggle)
+    {
+        _applyWaterLevel = toggle;
+    }
+
+    public void SetWaterLevel(float level)
+    {
+        _activeWaterLevel = (int)level;
+    }
 }

@@ -29,7 +29,7 @@ public static class HexMetrics
 
     // river related stuff
     public const float StreamBedElevationOffset = -1.75f;
-    public const float RiverSurfaceElevationOffset = -0.5f;
+    public const float WaterSurfaceElevationOffset = -0.5f;
 
     public static Texture2D NoiseSource;
 

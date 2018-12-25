@@ -65,10 +65,22 @@ public class HexCell : MonoBehaviour
         }
     }
 
-    public HexDirection RiverBeginOrEndDirection
+    public HexDirection RiverBeginOrEndDirection => HasIncomingRiver ? IncomingRiver : OutgoingRiver;
+
+    public int WaterLevel
     {
-        get { return HasIncomingRiver ? IncomingRiver : OutgoingRiver; }
+        get => _waterLevel;
+        set
+        {
+            if (_waterLevel == value)
+                return;
+            _waterLevel = value;
+            Refresh();
+        }
     }
+    int _waterLevel;
+
+    public bool IsUnderwater => _waterLevel > 0;
     #endregion
 
     public HexCoordinates Coordinates;
@@ -151,7 +163,7 @@ public class HexCell : MonoBehaviour
     {
         // incoming river is already set
         if (HasIncomingRiver) return;
-        
+
         // neighbor does not exists or its outgoing river is already set
         if (neighbor.HasOutgoingRiver) return;
 
@@ -172,7 +184,7 @@ public class HexCell : MonoBehaviour
     {
         // incoming river is already set
         if (HasOutgoingRiver) return;
-        
+
         // neighbor does not exists or its incoming river is already set
         if (neighbor.HasIncomingRiver) return;
 
@@ -205,7 +217,9 @@ public class HexCell : MonoBehaviour
         }
     }
 
-    public float RiverSurfaceY => (Elevation + HexMetrics.RiverSurfaceElevationOffset) * HexMetrics.ElevationStep;
+    public float RiverSurfaceY => (Elevation + HexMetrics.WaterSurfaceElevationOffset) * HexMetrics.ElevationStep;
+
+    public float WaterSurfaceY => (_waterLevel + HexMetrics.WaterSurfaceElevationOffset) * HexMetrics.ElevationStep;
 
     public void AddRoad(HexDirection direction)
     {
