@@ -22,7 +22,7 @@ public static class HexMetrics
     public const float HorizontalTerraceStepSize = 1f / TerraceSteps;
     public const float VerticalTerraceStepSize = 1f / (TerracesPerSlope + 1);
 
-    public const float CellPerturbStrength = 0f; //4f;
+    public const float CellPerturbStrength = 2f;
     public const float NoiseScale = 0.003f; // world coordinates need to scall down to match the texture so noise can maintain its coherence
     public static float ElevationPerturbStrength = 1.5f;
     public static bool ElevationPerturbFlag = true;

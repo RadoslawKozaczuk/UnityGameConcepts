@@ -26,11 +26,7 @@ public class HexMapEditor : MonoBehaviour
             _previousCell = null;
     }
 
-    public void SetRiverMode(int mode)
-    {
-        _riverMode = (EditModes)mode;
-        Debug.Log("river mode: " + (int)_riverMode);
-    }
+    public void SetRiverMode(int mode) => _riverMode = (EditModes)mode;
 
     void HandleInput()
     {
@@ -56,7 +52,6 @@ public class HexMapEditor : MonoBehaviour
             if (_previousCell.GetNeighbor(_dragDirection) == currentCell)
             {
                 _isDrag = true;
-                Debug.Log("Drag direction: " + _dragDirection.ToString());
                 return;
             }
         }
@@ -132,20 +127,11 @@ public class HexMapEditor : MonoBehaviour
 
     public void ToggleTerrainPerturbation() => HexMetrics.ElevationPerturbFlag = !HexMetrics.ElevationPerturbFlag;
 
-    public void RecreateMap()
-    {
-
-    }
+    public void RecreateMap() { }
 
     public void SetRoadMode(int mode) => _roadMode = (EditModes)mode;
 
-    public void SetApplyWaterLevel(bool toggle)
-    {
-        _applyWaterLevel = toggle;
-    }
+    public void SetApplyWaterLevel(bool toggle) => _applyWaterLevel = toggle;
 
-    public void SetWaterLevel(float level)
-    {
-        _activeWaterLevel = (int)level;
-    }
+    public void SetWaterLevel(float level) => _activeWaterLevel = (int)level;
 }
