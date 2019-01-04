@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Estuaries
-  m_Shader: {fileID: 4800000, guid: c4437962bc091804baef93fa82030533, type: 3}
+  m_Name: Estuary
+  m_Shader: {fileID: 4800000, guid: f348f0db7f1705243afc4e93ff27c9cc, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
