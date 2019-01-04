@@ -45,11 +45,7 @@ public class HexCell : MonoBehaviour
             uiPosition.z = -position.y;
             UiRect.localPosition = uiPosition;
 
-            // preventing uphill rivers
-            if (HasOutgoingRiver && Elevation < GetNeighbor(OutgoingRiver).Elevation)
-                RemoveOutgoingRiver();
-            if (HasIncomingRiver && Elevation > GetNeighbor(IncomingRiver).Elevation)
-                RemoveIncomingRiver();
+            ValidateRivers();
 
             Refresh();
         }
@@ -74,7 +70,9 @@ public class HexCell : MonoBehaviour
         {
             if (_waterLevel == value)
                 return;
+
             _waterLevel = value;
+            ValidateRivers();
             Refresh();
         }
     }
@@ -166,9 +164,8 @@ public class HexCell : MonoBehaviour
 
         // neighbor does not exists or its outgoing river is already set
         if (neighbor.HasOutgoingRiver) return;
-
-        // river cannot flow uphill
-        if (Elevation > neighbor.Elevation) return;
+        
+        if (!IsValidRiverDestination(neighbor)) return;
 
         HasIncomingRiver = true;
         IncomingRiver = direction;
@@ -187,9 +184,8 @@ public class HexCell : MonoBehaviour
 
         // neighbor does not exists or its incoming river is already set
         if (neighbor.HasIncomingRiver) return;
-
-        // river cannot flow uphill
-        if (Elevation > neighbor.Elevation) return;
+        
+        if (!IsValidRiverDestination(neighbor)) return;
 
         HasOutgoingRiver = true;
         IncomingRiver = direction;
@@ -244,11 +240,25 @@ public class HexCell : MonoBehaviour
                 SetRoad(i, false);
     }
 
+    bool IsValidRiverDestination(HexCell neighbor) => neighbor && (Elevation >= neighbor.Elevation || WaterLevel == neighbor.Elevation);
+
     void SetRoad(int index, bool state)
     {
         _roads[index] = state;
         _neighbors[index]._roads[(int)((HexDirection)index).Opposite()] = state;
         _neighbors[index].RefreshSelfOnly();
         RefreshSelfOnly();
+    }
+
+    void ValidateRivers()
+    {
+        if (HasOutgoingRiver && !IsValidRiverDestination(GetNeighbor(OutgoingRiver)))
+        {
+            RemoveOutgoingRiver();
+        }
+        if (HasIncomingRiver && !GetNeighbor(IncomingRiver).IsValidRiverDestination(this))
+        {
+            RemoveIncomingRiver();
+        }
     }
 }
