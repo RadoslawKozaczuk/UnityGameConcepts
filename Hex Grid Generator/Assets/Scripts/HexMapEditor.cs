@@ -7,12 +7,12 @@ public class HexMapEditor : MonoBehaviour
     [SerializeField] HexGrid _hexGrid;
     HexCell _previousCell;
     Color _activeColor;
-    int _activeElevation, _brushSize, _activeWaterLevel;
+    int _activeElevation = 1, _brushSize, _activeWaterLevel;
     bool _applyColor = false, _applyElevation = true, _applyWaterLevel = true, _isDrag;
     HexDirection _dragDirection;
     EditModes _riverMode, _roadMode;
 
-    void Awake() => SelectColor(0);
+    void Awake() => SelectColor(1);
 
     void Update()
     {

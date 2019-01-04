@@ -1,26 +1,36 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Stores coordinates of the 5 edge verticies coordinates ordered from the left to the right (clockwise) along the cell's edge.
+/// </summary>
 public struct EdgeVertices
 {
     // vertices are ordered clockwise along the cell's edge
     public Vector3 V1, V2, V3, V4, V5; // v3 is used by rivers
-
-    public EdgeVertices(Vector3 startPoint, Vector3 endPoint)
+    
+    /// <summary>
+    /// Points V2, V3 and V4 are evenly distributed along the edge.
+    /// </summary>
+    public EdgeVertices(Vector3 left, Vector3 right)
     {
-        V1 = startPoint;
-        V2 = Vector3.Lerp(startPoint, endPoint, 0.25f);
-        V3 = Vector3.Lerp(startPoint, endPoint, 0.5f);
-        V4 = Vector3.Lerp(startPoint, endPoint, 0.75f);
-        V5 = endPoint;
+        V1 = left;
+        V2 = Vector3.Lerp(left, right, 0.25f);
+        V3 = Vector3.Lerp(left, right, 0.5f);
+        V4 = Vector3.Lerp(left, right, 0.75f);
+        V5 = right;
     }
 
-    public EdgeVertices(Vector3 corner1, Vector3 corner2, float outerStep)
+    /// <summary>
+    /// Distance parameter determines the distance between the V1 and V2, and V4 and V5 points.
+    /// Point V3 is always in the middle.
+    /// </summary>
+    public EdgeVertices(Vector3 left, Vector3 right, float distance)
     {
-        V1 = corner1;
-        V2 = Vector3.Lerp(corner1, corner2, outerStep);
-        V3 = Vector3.Lerp(corner1, corner2, 0.5f);
-        V4 = Vector3.Lerp(corner1, corner2, 1f - outerStep);
-        V5 = corner2;
+        V1 = left;
+        V2 = Vector3.Lerp(left, right, distance);
+        V3 = Vector3.Lerp(left, right, 0.5f);
+        V4 = Vector3.Lerp(left, right, 1f - distance);
+        V5 = right;
     }
 
     /// <summary>

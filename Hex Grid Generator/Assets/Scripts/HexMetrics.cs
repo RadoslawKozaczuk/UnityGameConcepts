@@ -31,6 +31,8 @@ public static class HexMetrics
     public const float StreamBedElevationOffset = -1.75f;
     public const float WaterSurfaceElevationOffset = -0.5f;
 
+    public const float WaterFactor = 0.6f;
+    
     public static Texture2D NoiseSource;
 
     public static Vector3[] Corners = {
@@ -43,11 +45,36 @@ public static class HexMetrics
         new Vector3(0f, 0f, OuterRadius) // seventh and first are exactly the same to prevent IndexOutOfBonds exception
     };
 
-    public static Vector3 GetFirstCorner(HexDirection direction) => Corners[(int)direction];
-    public static Vector3 GetSecondCorner(HexDirection direction) => Corners[(int)direction + 1];
+    /// <summary>
+    /// Returns left triangle corner coordinates for the given direction.
+    /// </summary>
+    public static Vector3 GetLeftCorner(HexDirection direction) => Corners[(int)direction];
+    /// <summary>
+    /// Returns right triangle corner coordinates for the given direction.
+    /// </summary>
+    public static Vector3 GetRightCorner(HexDirection direction) => Corners[(int)direction + 1];
 
-    public static Vector3 GetFirstSolidCorner(HexDirection direction) => Corners[(int)direction] * SolidFactor;
-    public static Vector3 GetSecondSolidCorner(HexDirection direction) => Corners[(int)direction + 1] * SolidFactor;
+    /// <summary>
+    /// Returns left triangle corner coordinates for the given direction multiplied by the SolidFactor constant.
+    /// The higher the constant value the closer the corner is to the center of the hex.
+    /// </summary>
+    public static Vector3 GetLeftSolidCorner(HexDirection direction) => Corners[(int)direction] * SolidFactor;
+    /// <summary>
+    /// Returns right triangle corner coordinates for the given direction multiplied by the SolidFactor constant.
+    /// The higher the constant value the closer the corner is to the center of the hex.
+    /// </summary>
+    public static Vector3 GetRightSolidCorner(HexDirection direction) => Corners[(int)direction + 1] * SolidFactor;
+
+    /// <summary>
+    /// Returns left triangle corner coordinates for the given direction multiplied by the WaterFactor constant.
+    /// The higher the constant value the closer the corner is to the center of the hex.
+    /// </summary>
+    public static Vector3 GetLeftWaterCorner(HexDirection direction) => Corners[(int)direction] * WaterFactor;
+    /// <summary>
+    /// Returns right triangle corner coordinates for the given direction multiplied by the WaterFactor constant.
+    /// The higher the constant value the closer the corner is to the center of the hex.
+    /// </summary>
+    public static Vector3 GetRightWaterCorner(HexDirection direction) => Corners[(int)direction + 1] * WaterFactor;
 
     public static Vector3 GetBridge(HexDirection direction) 
         => (Corners[(int)direction] + Corners[(int)direction + 1]) * BlendFactor;
@@ -107,4 +134,8 @@ public static class HexMetrics
         position.z += (sample.z * 2f - 1f) * CellPerturbStrength;
         return position;
     }
+
+    public const float waterBlendFactor = 1f - WaterFactor;
+    public static Vector3 GetWaterBridge(HexDirection direction) 
+        => (Corners[(int)direction] + Corners[(int)direction + 1]) * waterBlendFactor;
 }

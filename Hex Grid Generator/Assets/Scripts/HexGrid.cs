@@ -120,6 +120,9 @@ public class HexGrid : MonoBehaviour
         cell.UiRect = label.rectTransform;
         cell.Elevation = 0;
 
+        // default values
+        cell.Elevation = 1;
+
         AddCellToChunk(x, z, cell);
     }
 
