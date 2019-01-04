@@ -2,8 +2,8 @@
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class BoardTile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IDropHandler {
-
+public class BoardTile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IDropHandler
+{
     SymbolType _symbolType;
     Animator _animator;
 

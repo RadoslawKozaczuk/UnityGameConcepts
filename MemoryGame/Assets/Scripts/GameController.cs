@@ -28,7 +28,7 @@ public class GameController : MonoBehaviour
         _manager.TimeLeft -= Time.deltaTime;
 
         if (_manager.TimeLeft <= 0)
-            _manager.IsPlaying = false;
+            _manager.EndGame(Assets.Scripts.GameEndStatus.Lost);
     }
 
     public void StartGame()
@@ -37,7 +37,6 @@ public class GameController : MonoBehaviour
 
         _manager.TimeLeft = _gameOptions.GameTimeLimit;
         _manager.Points = 0;
-        _manager.IsPlaying = true;
 
         _gameBoard.SetBoardDimensions(_gameOptions.BoardWidth, _gameOptions.BoardHeight);
         var tilesToMatch = _gameBoard.Tiles
@@ -51,12 +50,12 @@ public class GameController : MonoBehaviour
     void AfterAnimation(GameBoard gameBoard)
     {
         _manager.IsGameBoardAnimating = false;
-        _manager.IsPlaying = true;
+        _manager.StartGame();
     }
 
     void GameBoardOnAllTilesMatched(GameBoard gameBoard)
     {
-        _manager.IsPlaying = false;
+        _manager.EndGame(Assets.Scripts.GameEndStatus.Won);
     }
 
     void GameBoardOnTilePlaced(GameBoard gameBoard, BoardTile tile)

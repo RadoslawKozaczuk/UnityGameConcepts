@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets.Scripts;
+using System;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -14,6 +15,7 @@ public class GameManager : MonoBehaviour
     public event Action<bool> IsOptionsWindowOpenChanged;
     public event Action<bool> IsPlayingChanged;
     public event Action<bool> IsGameBoardAnimatingChanged;
+    public event Action<GameEndStatus> GameEnded;
     
     public float TimeLeft
     {
@@ -52,7 +54,7 @@ public class GameManager : MonoBehaviour
     public bool IsPlaying
     {
         get { return _isPlaying; }
-        set
+        private set
         {
             _isPlaying = value;
 
@@ -71,5 +73,18 @@ public class GameManager : MonoBehaviour
             if (IsGameBoardAnimatingChanged != null)
                 IsGameBoardAnimatingChanged(value);
         }
+    }
+
+    public void StartGame()
+    {
+        IsPlaying = true;
+    }
+
+    public void EndGame(GameEndStatus status)
+    {
+        IsPlaying = false;
+
+        if (GameEnded != null)
+            GameEnded(status);
     }
 }
