@@ -22,17 +22,18 @@ public static class HexMetrics
     public const float HorizontalTerraceStepSize = 1f / TerraceSteps;
     public const float VerticalTerraceStepSize = 1f / (TerracesPerSlope + 1);
 
-    public const float CellPerturbStrength = 2f;
+    public const float CellPerturbStrength = 1.75f;
     public const float NoiseScale = 0.003f; // world coordinates need to scall down to match the texture so noise can maintain its coherence
     public static float ElevationPerturbStrength = 1.5f;
     public static bool ElevationPerturbFlag = true;
 
     // river related stuff
     public const float StreamBedElevationOffset = -1.75f;
-    public const float WaterSurfaceElevationOffset = -0.5f;
+    public const float RiverSurfaceElevationOffset = -0.5f;
 
     public const float WaterFactor = 0.6f;
-    
+    public const float WaterSurfaceY = 2f;
+
     public static Texture2D NoiseSource;
 
     public static Vector3[] Corners = {
@@ -78,11 +79,13 @@ public static class HexMetrics
 
     public static Vector3 GetBridge(HexDirection direction) 
         => (Corners[(int)direction] + Corners[(int)direction + 1]) * BlendFactor;
-
-    // Interpolation between two values a and b is done with a third interpolator t. 
-    // When t is 0, the result is a. When it is 1, the result is b. 
-    // When t lies somewhere in between 0 and 1, a and b are mixed proportionally. 
-    // Thus the formula for the interpolated result is (1 − t)a + tb.
+    
+    /// <summary>
+    /// Interpolation between two values a and b is done with a third interpolator t. 
+    /// When t is 0, the result is a.When it is 1, the result is b. 
+    /// When t lies somewhere in between 0 and 1, a and b are mixed proportionally. 
+    /// Thus the formula for the interpolated result is (1 − t)a + tb.
+    /// </summary>
     public static Vector3 TerraceLerp(Vector3 a, Vector3 b, int step)
     {
         float h = step * HorizontalTerraceStepSize;
@@ -103,13 +106,16 @@ public static class HexMetrics
         return Color.Lerp(a, b, h);
     }
 
-    public static HexEdgeType GetEdgeType(int elevation1, int elevation2)
+    /// <summary>
+    /// Returns the edge type based on the difference of the levels.
+    /// </summary>
+    public static HexEdgeType GetEdgeType(int level1, int level2)
     {
-        if (elevation1 == elevation2)
+        if (level1 == level2)
             return HexEdgeType.Flat;
 
         // If the level difference is exactly one step, then we have a slope. It doesn't matter whether the slope goes up or down.
-        int delta = elevation2 - elevation1;
+        int delta = level2 - level1;
         if (delta == 1 || delta == -1)
             return HexEdgeType.Slope;
 
@@ -124,8 +130,10 @@ public static class HexMetrics
 
     public static Vector3 GetSolidEdgeMiddle(HexDirection direction) 
         => (Corners[(int)direction] + Corners[(int)direction + 1]) * (0.5f * SolidFactor);
-
-    // modify the position of the point accordingly to the noise function
+    
+    /// <summary>
+    /// Modifies the position of the point accordingly to the noise function.
+    /// </summary>
     public static Vector3 Perturb(Vector3 position)
     {
         Vector4 sample = SampleNoise(position);
@@ -134,8 +142,4 @@ public static class HexMetrics
         position.z += (sample.z * 2f - 1f) * CellPerturbStrength;
         return position;
     }
-
-    public const float waterBlendFactor = 1f - WaterFactor;
-    public static Vector3 GetWaterBridge(HexDirection direction) 
-        => (Corners[(int)direction] + Corners[(int)direction + 1]) * waterBlendFactor;
 }

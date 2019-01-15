@@ -61,7 +61,7 @@ public class HexGridChunk : MonoBehaviour
     void Precalculation(HexCell cell)
     {
         cell.Center = cell.WaterCenter = cell.transform.localPosition;
-        cell.WaterCenter.y = HexCell.WaterSurfaceY;
+        cell.WaterCenter.y = HexMetrics.WaterSurfaceY;
 
         for (int i = 0; i <= 5; i++)
         {
@@ -74,15 +74,9 @@ public class HexGridChunk : MonoBehaviour
             if (cell.HasRiver && cell.HasRiverThroughEdge(direction))
                 cell.Edges[i].V3.y = cell.StreamBedY;
             
-            var leftCorner = HexMetrics.GetLeftWaterCorner(direction);
-            leftCorner += cell.WaterCenter;
-            leftCorner.y = HexCell.WaterSurfaceY;
-        
-            var rightCorner = HexMetrics.GetRightWaterCorner(direction);
-            rightCorner += cell.WaterCenter;
-            rightCorner.y = HexCell.WaterSurfaceY;
-            
-            cell.WaterEdges[i] = new EdgeVertices(leftCorner, rightCorner);
+            cell.WaterEdges[i] = new EdgeVertices(
+                cell.WaterCenter + HexMetrics.GetLeftWaterCorner(direction), 
+                cell.WaterCenter + HexMetrics.GetRightWaterCorner(direction));
         }
     }
 
@@ -509,7 +503,7 @@ public class HexGridChunk : MonoBehaviour
                     TriangulateWaterfallInWater(
                         edgeBegin.V2, edgeBegin.V4, edgeEnd.V2, edgeEnd.V4,
                         cell.RiverSurfaceY, neighbor.RiverSurfaceY,
-                        HexCell.WaterSurfaceY);
+                        HexMetrics.WaterSurfaceY);
                 }
             }
             else if (!neighbor.IsUnderwater && neighbor.Elevation > cell.WaterLevel)
@@ -517,7 +511,7 @@ public class HexGridChunk : MonoBehaviour
                 TriangulateWaterfallInWater(
                     edgeEnd.V4, edgeEnd.V2, edgeBegin.V4, edgeBegin.V2,
                     neighbor.RiverSurfaceY, cell.RiverSurfaceY,
-                    HexCell.WaterSurfaceY);
+                    HexMetrics.WaterSurfaceY);
             }
         }
 

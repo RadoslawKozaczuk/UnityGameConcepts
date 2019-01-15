@@ -215,14 +215,8 @@ public class HexCell : MonoBehaviour
         }
     }
 
-    public float RiverSurfaceY => (Elevation + HexMetrics.WaterSurfaceElevationOffset) * HexMetrics.ElevationStep;
-
-    // old way of calulating it
-    //public float WaterSurfaceY => (_waterLevel + HexMetrics.WaterSurfaceElevationOffset) * HexMetrics.ElevationStep;
-
-    // new hyper way
-    public const float WaterSurfaceY = 2.5f;
-
+    public float RiverSurfaceY => (Elevation + HexMetrics.RiverSurfaceElevationOffset) * HexMetrics.ElevationStep;
+    
     public void AddRoad(HexDirection direction)
     {
         // rivers and roads cannot go in the same direction as well as the elevation difference cannot be greater than 1
