@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class HexCell : MonoBehaviour
 {
-    #region properties
+    #region Properties
     public Vector3 Position => transform.localPosition;
 
     public Color Color
@@ -80,13 +80,18 @@ public class HexCell : MonoBehaviour
 
     public bool IsUnderwater => _waterLevel > 0;
     #endregion
-
+    
     public HexCoordinates Coordinates;
     public RectTransform UiRect;
     public HexGridChunk Chunk;
     public bool HasIncomingRiver, HasOutgoingRiver;
     public HexDirection IncomingRiver, OutgoingRiver;
 
+    public Vector3 Center;
+    public Vector3 WaterCenter;
+    public EdgeVertices[] Edges = new EdgeVertices[6];
+    public EdgeVertices[] WaterEdges = new EdgeVertices[6];
+    
     [SerializeField] HexCell[] _neighbors;
     [SerializeField] bool[] _roads;
 
@@ -95,13 +100,10 @@ public class HexCell : MonoBehaviour
 
     public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
 
-    public HexCell GetNeighbor(HexDirection? direction)
-    {
-        if (direction == null)
-            throw new ArgumentNullException();
-
-        return _neighbors[(int)direction];
-    }
+    /// <summary>
+    /// Returns neighbor of the particular cell.
+    /// </summary>
+    public HexCell GetNeighbor(HexDirection direction) => _neighbors[(int)direction];
 
     public void SetNeighbor(HexDirection direction, HexCell cell)
     {
@@ -215,7 +217,11 @@ public class HexCell : MonoBehaviour
 
     public float RiverSurfaceY => (Elevation + HexMetrics.WaterSurfaceElevationOffset) * HexMetrics.ElevationStep;
 
-    public float WaterSurfaceY => (_waterLevel + HexMetrics.WaterSurfaceElevationOffset) * HexMetrics.ElevationStep;
+    // old way of calulating it
+    //public float WaterSurfaceY => (_waterLevel + HexMetrics.WaterSurfaceElevationOffset) * HexMetrics.ElevationStep;
+
+    // new hyper way
+    public const float WaterSurfaceY = 2.5f;
 
     public void AddRoad(HexDirection direction)
     {
@@ -253,12 +259,9 @@ public class HexCell : MonoBehaviour
     void ValidateRivers()
     {
         if (HasOutgoingRiver && !IsValidRiverDestination(GetNeighbor(OutgoingRiver)))
-        {
             RemoveOutgoingRiver();
-        }
+
         if (HasIncomingRiver && !GetNeighbor(IncomingRiver).IsValidRiverDestination(this))
-        {
             RemoveIncomingRiver();
-        }
     }
 }

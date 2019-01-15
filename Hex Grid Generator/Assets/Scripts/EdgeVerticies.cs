@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Text;
+using UnityEngine;
 
 /// <summary>
 /// Stores coordinates of the 5 edge verticies coordinates ordered from the left to the right (clockwise) along the cell's edge.
@@ -45,5 +46,22 @@ public struct EdgeVertices
         result.V4 = HexMetrics.TerraceLerp(begin.V4, end.V4, step);
         result.V5 = HexMetrics.TerraceLerp(begin.V5, end.V5, step);
         return result;
+    }
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        sb.Append("(");
+        sb.Append(V1);
+        sb.Append(", ");
+        sb.Append(V2);
+        sb.Append(", ");
+        sb.Append(V3);
+        sb.Append(", ");
+        sb.Append(V4);
+        sb.Append(", ");
+        sb.Append(V5);
+        sb.Append(")");
+        return sb.ToString();
     }
 }

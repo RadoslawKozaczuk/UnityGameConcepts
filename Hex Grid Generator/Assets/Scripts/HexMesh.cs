@@ -80,6 +80,9 @@ public class HexMesh : MonoBehaviour
         _colors.Add(c3);
     }
 
+    /// <summary>
+    /// Creates a quad. Verticies order: left-bottom, right-bottom, left-top, right-top.
+    /// </summary>
     public void AddQuad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
         int vertexIndex = _vertices.Count;
