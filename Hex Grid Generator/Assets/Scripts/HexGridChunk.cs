@@ -453,13 +453,10 @@ public class HexGridChunk : MonoBehaviour
             var neighbor = cell.GetNeighbor(direction);
             if (neighbor.IsUnderwater)
             {
-                // connection with an estuary
-                var closerWaterEdge = cell.WaterEdges[(int)direction];
-                TriangulateRiverQuadUnperturbed(
-                    m.V2, m.V4,
-                    closerWaterEdge.V1, closerWaterEdge.V5,
+                TriangulateRiverQuadUnperturbed(m.V2, m.V4, closerEdge.V2, closerEdge.V4, 
                     cell.RiverSurfaceY, HexMetrics.WaterSurfaceY, 0.6f, reversed);
             }
+            // normal connection between two rivers
             else
             {
                 TriangulateRiverQuadUnperturbed(m.V2, m.V4, closerEdge.V2, closerEdge.V4, cell.RiverSurfaceY, 0.6f, reversed);
@@ -534,7 +531,8 @@ public class HexGridChunk : MonoBehaviour
                 else
                 {
                     edgeEnd.V3.y = neighbor.StreamBedY;
-                    TriangulateRiverQuadUnperturbed(edgeBegin.V2, edgeBegin.V4, edgeEnd.V2, edgeEnd.V4, cell.RiverSurfaceY, neighbor.RiverSurfaceY,
+                    TriangulateRiverQuadUnperturbed(edgeBegin.V2, edgeBegin.V4, edgeEnd.V2, edgeEnd.V4, 
+                        cell.RiverSurfaceY, neighbor.RiverSurfaceY,
                         0.8f, cell.HasIncomingRiver && cell.IncomingRiver == direction);
                 }
             }
@@ -734,98 +732,158 @@ public class HexGridChunk : MonoBehaviour
 
     void TriangulateWater(HexDirection direction, HexCell cell)
     {
-        var closerEdge = cell.WaterEdges[(int)direction];
+        EdgeVertices closerWaterEdge = cell.WaterEdges[(int)direction];
         
         // water fan
-        Water.AddTriangleUnperturbed(cell.WaterCenter, closerEdge.V1, closerEdge.V5);
+        Water.AddTriangleUnperturbed(cell.WaterCenter, closerWaterEdge.V1, closerWaterEdge.V5);
 
         HexCell neighbor = cell.GetNeighbor(direction);
         if (neighbor == null) return;
 
-        var nextDirection = direction.Next();
+        // estuary
+        if (!neighbor.IsUnderwater && cell.HasRiverThroughEdge(direction))
+            TriangulateEstuary(cell, direction);
+
+        EdgeVertices furtherEdge = neighbor.Edges[(int)direction.Opposite()];
+        EdgeVertices furtherWaterEdge = neighbor.WaterEdges[(int)direction.Opposite()];
+        HexDirection nextDirection = direction.Next();
         HexCell nextNeighbor = cell.GetNeighbor(nextDirection);
+        HexCell previousNeighbor = cell.GetNeighbor(direction.Previous());
 
-        EdgeVertices furtherEdge = neighbor.WaterEdges[(int)direction.Opposite()];
-        EdgeVertices furtherEdgeNext;
-
-        // calculate connection quads and triangles
+        // neighbor is under water as well
         if (neighbor.IsUnderwater)
         {
-            // we always generate connection only on the eastern side to avoid duplications
             if (direction <= HexDirection.SouthEast)
+                Water.AddQuadUnperturbed(closerWaterEdge.V1, closerWaterEdge.V5, furtherWaterEdge.V5, furtherWaterEdge.V1);
+        }
+        // estuary is on the right side
+        else if (nextNeighbor != null && nextNeighbor.HasEstuaryThroughEdge(direction.Previous()))
+        {
+            Vector3 v4 = furtherEdge.V1;
+            v4.y = HexMetrics.WaterSurfaceY;
+            WaterShore.AddQuadUnperturbed(closerWaterEdge.V1, closerWaterEdge.V5, furtherWaterEdge.V5, v4);
+            WaterShore.AddQuadUV(0f, 0f, 0f, 1f);
+        }
+        // estuary is on the left side 
+        else if (previousNeighbor != null && previousNeighbor.HasEstuaryThroughEdge(direction.Next()))
+        {
+            Vector3 v3 = furtherEdge.V5;
+            v3.y = HexMetrics.WaterSurfaceY;
+            WaterShore.AddQuadUnperturbed(closerWaterEdge.V1, closerWaterEdge.V5, v3, furtherWaterEdge.V1);
+            WaterShore.AddQuadUV(0f, 0f, 0f, 1f);
+        }
+        // standard connection quad
+        else if (!cell.HasRiverThroughEdge(direction))
+        {
+            WaterShore.AddQuadUnperturbed(closerWaterEdge.V1, closerWaterEdge.V5, furtherWaterEdge.V5, furtherWaterEdge.V1);
+            WaterShore.AddQuadUV(0f, 0f, 0f, 1f);
+        }
+        
+        // calculate connection triangles
+        if (neighbor.IsUnderwater)
+        {
+            if (direction <= HexDirection.East && nextNeighbor != null && nextNeighbor.IsUnderwater)
             {
-                // connection betweem two cells
-                Water.AddQuadUnperturbed(closerEdge.V1, closerEdge.V5, furtherEdge.V5, furtherEdge.V1);
-
-                // connection triangle - only for east and north east
-                if (direction <= HexDirection.East && nextNeighbor != null && nextNeighbor.IsUnderwater)
-                {
-                    furtherEdgeNext = nextNeighbor.WaterEdges[(int)nextDirection.Opposite()];
-                    Water.AddTriangleUnperturbed(closerEdge.V5, furtherEdge.V1, furtherEdgeNext.V5);
-                }
+                Vector3 v3 = nextNeighbor.WaterEdges[(int)nextDirection.Opposite()].V5;
+                Water.AddTriangleUnperturbed(closerWaterEdge.V5, furtherWaterEdge.V1, v3);
             }
         }
         // calculate water shore
-        else
+        else if (cell.HasRiverThroughEdge(direction) && nextNeighbor != null)
         {
-            if (cell.HasRiverThroughEdge(direction))
+            Vector3 v2 = neighbor.Edges[(int)direction.Opposite()].V1;
+            v2.y = HexMetrics.WaterSurfaceY;
+            Vector3 v3 = nextNeighbor.WaterEdges[(int)nextDirection.Opposite()].V5;
+
+            WaterShore.AddTriangleUnperturbed(closerWaterEdge.V5, v2, v3);
+            WaterShore.AddTriangleUV(new Vector2(0f, 0f), new Vector2(0f, 1f),
+                new Vector2(0f, nextNeighbor.IsUnderwater ? 0f : 1f));
+        }
+        else if (nextNeighbor != null)
+        {
+            Vector3 v2, v3;
+            // estuary is on the right side
+            if (cell.HasRiverThroughEdge(nextDirection))
             {
-                TriangulateEstuary(closerEdge, furtherEdge, cell.IncomingRiver == direction);
+                v2 = furtherWaterEdge.V1;
+                v3 = nextNeighbor.Edges[(int)nextDirection.Opposite()].V5;
+                v3.y = HexMetrics.WaterSurfaceY;
+            }
+            // estuary is on the left side
+            else if(nextNeighbor.HasEstuaryThroughEdge(direction.Previous()))
+            {
+                v2 = furtherEdge.V1;
+                v2.y = HexMetrics.WaterSurfaceY;
+                v3 = nextNeighbor.WaterEdges[(int)nextDirection.Opposite()].V5;
             }
             else
             {
-                // water shore quads
-                WaterShore.AddQuadUnperturbed(closerEdge.V1, closerEdge.V5, furtherEdge.V5, furtherEdge.V1);
-                WaterShore.AddQuadUV(0f, 0f, 0f, 1f);
+                v2 = furtherWaterEdge.V1;
+                v3 = nextNeighbor.WaterEdges[(int)nextDirection.Opposite()].V5;
             }
-
-            // connection triangle
-            if (!neighbor.IsUnderwater && nextNeighbor != null)
-            {
-                furtherEdgeNext = nextNeighbor.WaterEdges[(int)nextDirection.Opposite()];
-                WaterShore.AddTriangleUnperturbed(closerEdge.V5, furtherEdge.V1, furtherEdgeNext.V5);
-                WaterShore.AddTriangleUV(new Vector2(0f, 0f),
-                    new Vector2(0f, 1f),
-                    new Vector2(0f, nextNeighbor.IsUnderwater ? 0f : 1f));
-            }
+            
+            WaterShore.AddTriangleUnperturbed(closerWaterEdge.V5, v2, v3);
+            WaterShore.AddTriangleUV(new Vector2(0f, 0f), new Vector2(0f, 1f),
+                new Vector2(0f, nextNeighbor.IsUnderwater ? 0f : 1f));
         }
     }
-
-    void TriangulateEstuary(EdgeVertices closerEdge, EdgeVertices furtherEdge, bool incomingRiver)
+    
+    void TriangulateEstuary(HexCell cell, HexDirection direction)
     {
-        WaterShore.AddTriangleUnperturbed(furtherEdge.V5, closerEdge.V2, closerEdge.V1);
-        WaterShore.AddTriangleUnperturbed(furtherEdge.V1, closerEdge.V5, closerEdge.V4);
+        var neighbor = cell.GetNeighbor(direction);
+
+        EdgeVertices closerWaterEdge = cell.WaterEdges[(int)direction];
+        EdgeVertices furtherWaterEdge = neighbor.WaterEdges[(int)direction.Opposite()];
+        EdgeVertices furtherEdge = neighbor.Edges[(int)direction.Opposite()];
+        furtherEdge.V1.y = HexMetrics.WaterSurfaceY;
+        furtherEdge.V2.y = HexMetrics.WaterSurfaceY;
+        furtherEdge.V3.y = HexMetrics.WaterSurfaceY;
+        furtherEdge.V4.y = HexMetrics.WaterSurfaceY;
+        furtherEdge.V5.y = HexMetrics.WaterSurfaceY;
+
+        WaterShore.AddTriangleUnperturbed(furtherEdge.V5, closerWaterEdge.V2, closerWaterEdge.V1);
+        WaterShore.AddTriangleUnperturbed(furtherEdge.V1, closerWaterEdge.V5, closerWaterEdge.V4);
         WaterShore.AddTriangleUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(0f, 0f));
         WaterShore.AddTriangleUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(0f, 0f));
 
         // left quad
         // quad is rotated 90 degrees to the right so the diagonal connection is shorter 
         // it is done to maintain the symetry with the other quad
-        Estuaries.AddQuadUnperturbed(furtherEdge.V5, closerEdge.V2, furtherEdge.V4, closerEdge.V3);
+        Estuaries.AddQuadUnperturbed(furtherEdge.V5, closerWaterEdge.V2, furtherEdge.V4, closerWaterEdge.V3);
         Estuaries.AddQuadUV(new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0f));
-
+        
         // big triangle in the middle
-        Estuaries.AddTriangleUnperturbed(closerEdge.V3, furtherEdge.V4, furtherEdge.V2);
+        Estuaries.AddTriangleUnperturbed(closerWaterEdge.V3, furtherEdge.V4, furtherEdge.V2);
         Estuaries.AddTriangleUV(new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f));
 
-        //// right quad
-        Estuaries.AddQuadUnperturbed(closerEdge.V3, closerEdge.V4, furtherEdge.V2, furtherEdge.V1);
+        // right quad
+        Estuaries.AddQuadUnperturbed(closerWaterEdge.V3, closerWaterEdge.V4, furtherEdge.V2, furtherEdge.V1);
         Estuaries.AddQuadUV(new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f));
-
-        // second UV set
-        if (incomingRiver)
+        
+        // is incoming river
+        if (cell.IncomingRiver == direction)
         {
-            Estuaries.AddQuadUV2(new Vector2(1.5f, 1f), new Vector2(0.7f, 1.15f), new Vector2(1f, 0.8f), new Vector2(0.5f, 1.1f));
-            Estuaries.AddTriangleUV2(new Vector2(0.5f, 1.1f), new Vector2(1f, 0.8f), new Vector2(0f, 0.8f));
-            Estuaries.AddQuadUV2(new Vector2(0.5f, 1.1f), new Vector2(0.3f, 1.15f), new Vector2(0f, 0.8f), new Vector2(-0.5f, 1f));
+            Estuaries.AddQuadUV2(
+                new Vector2(1.5f, 1f), new Vector2(0.7f, 1.15f), 
+                new Vector2(1f, 0.8f), new Vector2(0.5f, 1.1f));
+            Estuaries.AddTriangleUV2(
+                new Vector2(0.5f, 1.1f), new Vector2(1f, 0.8f), new Vector2(0f, 0.8f));
+            Estuaries.AddQuadUV2(
+                new Vector2(0.5f, 1.1f), new Vector2(0.3f, 1.15f), 
+                new Vector2(0f, 0.8f), new Vector2(-0.5f, 1f));
         }
         else
         {
             // the U coordinates have to be mirrored for outgoing rivers
             // the V coordinates are a little bit less straightforward
-            Estuaries.AddQuadUV2(new Vector2(-0.5f, -0.2f), new Vector2(0.3f, -0.35f), new Vector2(0f, 0f), new Vector2(0.5f, -0.3f));
-            Estuaries.AddTriangleUV2(new Vector2(0.5f, -0.3f), new Vector2(0f, 0f), new Vector2(1f, 0f));
-            Estuaries.AddQuadUV2(new Vector2(0.5f, -0.3f), new Vector2(0.7f, -0.35f), new Vector2(1f, 0f), new Vector2(1.5f, -0.2f));
+            Estuaries.AddQuadUV2(
+                new Vector2(-0.5f, -0.2f), new Vector2(0.3f, -0.35f), 
+                new Vector2(0f, 0f), new Vector2(0.5f, -0.3f));
+            Estuaries.AddTriangleUV2(
+                new Vector2(0.5f, -0.3f), new Vector2(0f, 0f), new Vector2(1f, 0f));
+            Estuaries.AddQuadUV2(
+                new Vector2(0.5f, -0.3f), new Vector2(0.7f, -0.35f), 
+                new Vector2(1f, 0f), new Vector2(1.5f, -0.2f));
         }
     }
 

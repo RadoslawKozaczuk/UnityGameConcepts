@@ -119,6 +119,14 @@ public class HexCell : MonoBehaviour
         => HasIncomingRiver && IncomingRiver == direction
         || HasOutgoingRiver && OutgoingRiver == direction;
 
+    public bool HasEstuaryThroughEdge(HexDirection direction)
+    {
+        var neighbor = GetNeighbor(direction);
+        return neighbor == null 
+            ? false 
+            : IsUnderwater == true && neighbor.IsUnderwater == false && HasRiverThroughEdge(direction);
+    }
+
     public bool HasRiver => HasIncomingRiver || HasOutgoingRiver;
 
     public bool HasRiverBeginOrEnd => HasIncomingRiver ^ HasOutgoingRiver; // xor operator, true only if one of the argument is true
