@@ -384,6 +384,8 @@ MonoBehaviour:
     - {fileID: 2186658941335485675, guid: 76e57e46d593b7f4bbe0a17d39bb4a56, type: 3}
     - {fileID: 2186658941335485675, guid: 76e57e46d593b7f4bbe0a17d39bb4a56, type: 3}
     - {fileID: 2186658941335485675, guid: 76e57e46d593b7f4bbe0a17d39bb4a56, type: 3}
+  BridgePrefab: {fileID: 740814318279988630, guid: 39a0940d499f7a74fa8a2afad493cba8,
+    type: 3}
 --- !u!1 &4654522915549201702
 GameObject:
   m_ObjectHideFlags: 0

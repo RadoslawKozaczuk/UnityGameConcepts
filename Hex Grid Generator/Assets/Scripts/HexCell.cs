@@ -90,6 +90,10 @@ public class HexCell : MonoBehaviour
     public Vector3 WaterCenter;
     public EdgeVertices[] Edges = new EdgeVertices[6];
     public EdgeVertices[] WaterEdges = new EdgeVertices[6];
+
+    // road related
+    public Vector3 RoadCenter, MiddleLeft, MiddleRight;
+
     
     [SerializeField] HexCell[] _neighbors;
     [SerializeField] bool[] _roads;

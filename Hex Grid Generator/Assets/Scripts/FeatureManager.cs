@@ -7,7 +7,7 @@ public class FeatureManager : MonoBehaviour
     public struct FeatureCollection
     {
         public Transform[] Prefabs;
-
+        
         /// <summary>
         /// Unfortunately, the editor does not show arrays of arrays. So we cannot configure them. 
         /// To work around this, we have to create a serializable struct that encapsulates the nested array.
@@ -20,10 +20,13 @@ public class FeatureManager : MonoBehaviour
     public const int HashGridSize = 256;
     public const float HashGridScale = 0.25f;
 
+    public const float BridgeDesignLength = 7f;
+
     /// <summary>
     /// Prefabs are ordered from the highest to the lowest probability.
     /// </summary>
     public FeatureCollection[] FeatureCollections;
+    public Transform BridgePrefab;
     Transform _container;
 
     static HexHash[] _hashGrid;
@@ -62,8 +65,24 @@ public class FeatureManager : MonoBehaviour
         instance.localPosition = HexMetrics.Perturb(position);
         instance.localRotation = Quaternion.Euler(0f, 360f * hash.Rotation, 0f);
 
-        float scale = (float)(0.8 + 0.4 * hash.Rotation);
+        float scale = (float)(0.8 + 0.3 * hash.Rotation);
         instance.localScale = new Vector3(scale, scale, scale);
+
+        instance.SetParent(_container, false);
+    }
+
+    public void AddBridge(Vector3 roadCenter1, Vector3 roadCenter2)
+    {
+        roadCenter1 = HexMetrics.Perturb(roadCenter1);
+        roadCenter2 = HexMetrics.Perturb(roadCenter2);
+        Transform instance = Instantiate(BridgePrefab);
+        instance.localPosition = (roadCenter1 + roadCenter2) * 0.5f;
+        
+        // the road centers define the forward vector of the bridge
+        instance.forward = roadCenter2 - roadCenter1;
+
+        float length = Vector3.Distance(roadCenter1, roadCenter2);
+        instance.localScale = new Vector3(3f, 1f, length * (7f / BridgeDesignLength));
 
         instance.SetParent(_container, false);
     }

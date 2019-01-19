@@ -678,7 +678,6 @@ public class HexGridChunk : MonoBehaviour
         bool hasRoadThroughEdge = cell.HasRoadThroughEdge(direction);
         bool previousHasRiver = cell.HasRiverThroughEdge(direction.Previous());
         bool nextHasRiver = cell.HasRiverThroughEdge(direction.Next());
-        Vector2 interpolators = GetRoadInterpolators(direction, cell);
         Vector3 roadCenter = center;
 
         if (cell.HasRiverBeginOrEnd)
@@ -698,7 +697,16 @@ public class HexGridChunk : MonoBehaviour
                     return;
                 corner = HexMetrics.GetLeftSolidCorner(direction);
             }
+
             roadCenter += corner * 0.5f;
+
+            // add bridges
+            if (cell.IncomingRiver == direction.Next() 
+                && (cell.HasRoadThroughEdge(direction.Next2()) || cell.HasRoadThroughEdge(direction.Opposite())))
+            {
+                Features.AddBridge(roadCenter, center - corner * 0.5f);
+            }
+
             center += corner * 0.25f;
         }
         // in case of zigzags
@@ -732,12 +740,20 @@ public class HexGridChunk : MonoBehaviour
                 middle = direction;
 
             // get rid off roads on the other side of the river
-            if (!cell.HasRoadThroughEdge(middle) && !cell.HasRoadThroughEdge(middle.Previous()) && !cell.HasRoadThroughEdge(middle.Next()))
+            if (!cell.HasRoadThroughEdge(middle) 
+                && !cell.HasRoadThroughEdge(middle.Previous()) 
+                && !cell.HasRoadThroughEdge(middle.Next()))
                 return;
 
-            roadCenter += HexMetrics.GetSolidEdgeMiddle(middle) * 0.25f;
-        }
+            Vector3 offset = HexMetrics.GetSolidEdgeMiddle(middle);
+            roadCenter += offset * 0.25f;
 
+            // prevent duplications
+            if (direction == middle && cell.HasRoadThroughEdge(direction.Opposite()))
+                Features.AddBridge(roadCenter, center - offset * (HexMetrics.InnerToOuter * 0.7f));
+        }
+        
+        Vector2 interpolators = GetRoadInterpolators(direction, cell);
         Vector3 mL = Vector3.Lerp(roadCenter, e.V1, interpolators.x);
         Vector3 mR = Vector3.Lerp(roadCenter, e.V5, interpolators.y);
         TriangulateRoad(roadCenter, mL, mR, e, hasRoadThroughEdge);
