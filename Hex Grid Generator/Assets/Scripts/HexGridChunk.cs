@@ -4,6 +4,7 @@ public class HexGridChunk : MonoBehaviour
 {
     // Water and water edge have different meshes and shaders
     public HexMesh Terrain, Rivers, Roads, Water, WaterShore, Estuaries;
+    public FeatureManager Features;
     HexCell[] _cells;
     Canvas _gridCanvas;
 
@@ -43,12 +44,16 @@ public class HexGridChunk : MonoBehaviour
         Water.Clear();
         WaterShore.Clear();
         Estuaries.Clear();
+        Features.Clear();
 
         for (int i = 0; i < _cells.Length; i++)
             Precalculation(_cells[i]);
 
         for (int i = 0; i < _cells.Length; i++)
+        {
             TriangulateCell(_cells[i]);
+            AddFeatures(_cells[i]);
+        }
 
         Terrain.Apply();
         Rivers.Apply();
@@ -56,6 +61,7 @@ public class HexGridChunk : MonoBehaviour
         Water.Apply();
         WaterShore.Apply();
         Estuaries.Apply();
+        Features.Apply();
     }
 
     void Precalculation(HexCell cell)
@@ -77,6 +83,66 @@ public class HexGridChunk : MonoBehaviour
             cell.WaterEdges[i] = new EdgeVertices(
                 cell.WaterCenter + HexMetrics.GetLeftWaterCorner(direction), 
                 cell.WaterCenter + HexMetrics.GetRightWaterCorner(direction));
+        }
+    }
+
+    void TriangulateCell(HexCell cell)
+    {
+        var center = cell.Center;
+
+        // hexagon itself is made of 12 triangles to add some variety
+        for (int i = 0; i <= 5; i++)
+        {
+            var direction = (HexDirection)i;
+            var edge = cell.Edges[(int)direction];
+
+            if (cell.HasRiver)
+            {
+                if (cell.HasRiverThroughEdge(direction))
+                {
+                    if (cell.HasRiverBeginOrEnd)
+                        TriangulateWithRiverBeginOrEnd(direction, cell);
+                    else
+                        TriangulateWithRiver(direction, cell);
+                }
+                else
+                {
+                    // draw the inner circles as two sets of triangles
+                    TriangulateAdjacentToRiver(direction, cell, cell.Edges[i]);
+                }
+            }
+            else
+            {
+                TriangulateEdgeFan(center, edge, cell.Color);
+
+                if (cell.HasRoads)
+                {
+                    var interpolators = GetRoadInterpolators(direction, cell);
+                    TriangulateRoad(center,
+                        Vector3.Lerp(center, edge.V1, interpolators.x),
+                        Vector3.Lerp(center, edge.V5, interpolators.y),
+                        edge, cell.HasRoadThroughEdge(direction));
+                }
+            }
+
+            if (cell.IsUnderwater)
+                TriangulateWater(direction, cell);
+        }
+
+        for (int i = 0; i <= 2; i++)
+            TriangulateConnection((HexDirection)i, cell, cell.Edges[i]);
+    }
+
+    void AddFeatures(HexCell cell)
+    {
+        for (int i = 0; i <= 5; i++)
+        {
+            var direction = (HexDirection)i;
+            if (!cell.IsUnderwater && !cell.HasRiverThroughEdge(direction) && !cell.HasRoadThroughEdge(direction))
+            {
+                var edge = cell.Edges[i];   
+                Features.AddFeature((cell.Center + edge.V1 + edge.V5) * (1f / 3f));
+            }
         }
     }
 
@@ -230,53 +296,6 @@ public class HexGridChunk : MonoBehaviour
 
         Terrain.AddTriangleUnperturbed(v2, HexMetrics.Perturb(left), boundary);
         Terrain.AddTriangleColor(c2, leftCell.Color, boundaryColor);
-    }
-
-    void TriangulateCell(HexCell cell)
-    {
-        var center = cell.Center;
-        
-        // hexagon itself is made of 12 triangles to add some variety
-        for (int i = 0; i <= 5; i++)
-        {
-            var direction = (HexDirection)i;
-            var edge = cell.Edges[(int)direction];
-
-            if (cell.HasRiver)
-            {
-                if (cell.HasRiverThroughEdge(direction))
-                {
-                    if (cell.HasRiverBeginOrEnd)
-                        TriangulateWithRiverBeginOrEnd(direction, cell);
-                    else
-                        TriangulateWithRiver(direction, cell);
-                }
-                else
-                {
-                    // draw the inner circles as two sets of triangles
-                    TriangulateAdjacentToRiver(direction, cell, cell.Edges[i]);
-                }
-            }
-            else
-            {
-                TriangulateEdgeFan(center, edge, cell.Color);
-
-                if (cell.HasRoads)
-                {
-                    var interpolators = GetRoadInterpolators(direction, cell);
-                    TriangulateRoad(center,
-                        Vector3.Lerp(center, edge.V1, interpolators.x),
-                        Vector3.Lerp(center, edge.V5, interpolators.y),
-                        edge, cell.HasRoadThroughEdge(direction));
-                }
-            }
-
-            if (cell.IsUnderwater)
-                TriangulateWater(direction, cell);
-        }
-
-        for(int i = 0; i <= 2; i++)
-            TriangulateConnection((HexDirection)i, cell, cell.Edges[i]);
     }
     
     // Placing the left and right vertices halfway between the center and corners is ﬁne, when there's a road adjacent to them. 

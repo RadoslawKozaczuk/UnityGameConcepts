@@ -2,6 +2,7 @@
 
 public static class HexMetrics
 {
+    #region Constants
     public const int ChunkSizeX = 5, ChunkSizeZ = 5;
     public const float ElevationStep = 3f;
 
@@ -33,6 +34,7 @@ public static class HexMetrics
 
     public const float WaterFactor = 0.6f;
     public const float WaterSurfaceY = 1.8f;
+    #endregion
 
     public static Texture2D NoiseSource;
 

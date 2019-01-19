@@ -662,6 +662,11 @@ PrefabInstance:
       propertyPath: ChunkCountZ
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114671281921795510, guid: 9a09060d1cac7864ca0a14c4671ebcc6,
+        type: 3}
+      propertyPath: Seed
+      value: 1234
+      objectReference: {fileID: 0}
     - target: {fileID: 4121859380876304, guid: 9a09060d1cac7864ca0a14c4671ebcc6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

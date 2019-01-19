@@ -11,13 +11,15 @@ public class HexGrid : MonoBehaviour
     public Color DefaultColor = Color.white;
     public Texture2D NoiseSource;
     public HexGridChunk ChunkPrefab;
-    
+    public int Seed;
+
     HexCell[] _cells;
     HexGridChunk[] _chunks;
 
     void Awake()
     {
         HexMetrics.NoiseSource = NoiseSource;
+        FeatureManager.InitializeHashGrid(Seed);
 
         _cellCountX = ChunkCountX * HexMetrics.ChunkSizeX;
         _cellCountZ = ChunkCountZ * HexMetrics.ChunkSizeZ;
@@ -25,8 +27,15 @@ public class HexGrid : MonoBehaviour
         CreateChunks();
         CreateCells();
     }
-    
-    void OnEnable() => HexMetrics.NoiseSource = NoiseSource;
+
+    void OnEnable()
+    {
+        if (!HexMetrics.NoiseSource)
+        {
+            HexMetrics.NoiseSource = NoiseSource;
+            FeatureManager.InitializeHashGrid(Seed);
+        }
+    }
 
     public HexCell GetCell(HexCoordinates coordinates)
     {
