@@ -2723,7 +2723,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c679d203979f4dc488bea4f91ac5ca85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _hexGrid: {fileID: 0}
+  _hexGrid: {fileID: 204262548}
 --- !u!1 &1106228637
 GameObject:
   m_ObjectHideFlags: 0
