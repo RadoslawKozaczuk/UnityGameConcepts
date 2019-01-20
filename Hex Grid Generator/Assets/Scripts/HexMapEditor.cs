@@ -1,19 +1,18 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using System.IO;
 
 public class HexMapEditor : MonoBehaviour
 {
-    [SerializeField] Color[] _colors;
     [SerializeField] HexGrid _hexGrid;
     HexCell _previousCell;
-    Color _activeColor;
-    int _activeElevation = 1, _brushSize, _activeWaterLevel;
-    bool _applyColor = false, _applyElevation = true, _applyWaterLevel = true, _isDrag;
     HexDirection _dragDirection;
     EditModes _riverMode, _roadMode;
 
-    void Awake() => SelectColor(1);
-
+    // TODO these default values should be read from the interface not hardcoded
+    int _activeTerrainTypeIndex = 2, _activeElevation = 1, _brushSize, _activeWaterLevel;
+    bool _applyElevation = true, _applyWaterLevel = true, _isDrag;
+    
     void Update()
     {
         // The EventSystem knows only about the UI objects 
@@ -27,6 +26,24 @@ public class HexMapEditor : MonoBehaviour
     }
 
     public void SetRiverMode(int mode) => _riverMode = (EditModes)mode;
+
+    public void Save()
+    {
+        string path = Path.Combine(Application.persistentDataPath, "test.map");
+        using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create)))
+        {
+            _hexGrid.Save(writer);
+        }
+    }
+
+    public void Load()
+    {
+        string path = Path.Combine(Application.persistentDataPath, "test.map");
+        using (BinaryReader reader = new BinaryReader(File.OpenRead(path)))
+        {
+            _hexGrid.Load(reader);
+        }
+    }
 
     void HandleInput()
     {
@@ -76,8 +93,8 @@ public class HexMapEditor : MonoBehaviour
     {
         if (cell)
         {
-            if (_applyColor)
-                cell.Color = _activeColor;
+            if (_activeTerrainTypeIndex >= 0)
+                cell.TerrainTypeIndex = _activeTerrainTypeIndex;
 
             if (_applyElevation)
                 cell.Elevation = _activeElevation;
@@ -106,18 +123,9 @@ public class HexMapEditor : MonoBehaviour
         }
     }
 
-    public void SelectColor(int index)
-    {
-        _applyColor = index >= 0;
-        if (_applyColor)
-            _activeColor = _colors[index];
-    }
+    public void SetTerrainTypeIndex(int index) => _activeTerrainTypeIndex = index;
 
-    public void SetElevation(float elevation)
-    {
-        if (_applyColor)
-            _activeElevation = (int)elevation;
-    }
+    public void SetElevation(float elevation) => _activeElevation = (int)elevation;
 
     public void SetApplyElevation(bool toggle) => _applyElevation = toggle;
 

@@ -37,6 +37,7 @@ public static class HexMetrics
     #endregion
 
     public static Texture2D NoiseSource;
+    public static Color[] Colors;
 
     public static Vector3[] Corners = {
         new Vector3(0f, 0f, OuterRadius),

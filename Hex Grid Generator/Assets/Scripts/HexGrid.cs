@@ -1,25 +1,26 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System.IO;
 
 public class HexGrid : MonoBehaviour
 {
-    public int ChunkCountX = 4, ChunkCountZ = 3;
-    int _cellCountX, _cellCountZ;
-
+    public Color[] Colors;
     public HexCell Cell;
     public Text CellLabelPrefab;
-    public Color DefaultColor = Color.white;
     public Texture2D NoiseSource;
     public HexGridChunk ChunkPrefab;
+    public int ChunkCountX = 4, ChunkCountZ = 3;
     public int Seed;
 
     HexCell[] _cells;
     HexGridChunk[] _chunks;
+    int _cellCountX, _cellCountZ;
 
     void Awake()
     {
         HexMetrics.NoiseSource = NoiseSource;
         FeatureManager.InitializeHashGrid(Seed);
+        HexMetrics.Colors = Colors;
 
         _cellCountX = ChunkCountX * HexMetrics.ChunkSizeX;
         _cellCountZ = ChunkCountZ * HexMetrics.ChunkSizeZ;
@@ -34,6 +35,7 @@ public class HexGrid : MonoBehaviour
         {
             HexMetrics.NoiseSource = NoiseSource;
             FeatureManager.InitializeHashGrid(Seed);
+            HexMetrics.Colors = Colors;
         }
     }
 
@@ -54,18 +56,40 @@ public class HexGrid : MonoBehaviour
             _chunks[i].ShowUI(visible);
     }
 
+    public void Save(BinaryWriter writer)
+    {
+        for (int i = 0; i < _cells.Length; i++)
+            _cells[i].Save(writer);
+    }
+
+    public void Load(BinaryReader reader)
+    {
+        for (int i = 0; i < _cells.Length; i++)
+            _cells[i].Load(reader);
+
+        for (int i = 0; i < _chunks.Length; i++)
+            _chunks[i].Refresh();
+    }
+
+    // Get cell returns cell from a given position
+    public HexCell GetCell(Vector3 position)
+    {
+        position = transform.InverseTransformPoint(position);
+        HexCoordinates coordinates = HexCoordinates.FromPosition(position);
+        int index = coordinates.X + coordinates.Z * _cellCountX + coordinates.Z / 2;
+        return _cells[index];
+    }
+
     void CreateChunks()
     {
         _chunks = new HexGridChunk[ChunkCountX * ChunkCountZ];
 
         for (int z = 0, i = 0; z < ChunkCountZ; z++)
-        {
             for (int x = 0; x < ChunkCountX; x++)
             {
                 HexGridChunk chunk = _chunks[i++] = Instantiate(ChunkPrefab);
                 chunk.transform.SetParent(transform);
             }
-        }
     }
 
     void CreateCells()
@@ -91,7 +115,6 @@ public class HexGrid : MonoBehaviour
         HexCell cell = _cells[i] = Instantiate(Cell);
         cell.transform.localPosition = position;
         cell.Coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
-        cell.Color = DefaultColor;
 
         // As we go through the cells row by row, left to right, we know which cells have already been created. 
         // Those are the cells that we can connect to.
@@ -144,14 +167,5 @@ public class HexGrid : MonoBehaviour
         int localX = x - chunkX * HexMetrics.ChunkSizeX;
         int localZ = z - chunkZ * HexMetrics.ChunkSizeZ;
         chunk.AddCell(localX + localZ * HexMetrics.ChunkSizeX, cell);
-    }
-
-    // Get cell returns cell from a given position
-    public HexCell GetCell(Vector3 position)
-    {
-        position = transform.InverseTransformPoint(position);
-        HexCoordinates coordinates = HexCoordinates.FromPosition(position);
-        int index = coordinates.X + coordinates.Z * _cellCountX + coordinates.Z / 2;
-        return _cells[index];
     }
 }
