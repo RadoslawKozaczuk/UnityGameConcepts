@@ -2,6 +2,13 @@
 
 public class HexMapCamera : MonoBehaviour
 {
+    public static bool Locked
+    {
+        set => _instance.enabled = !value;
+    }
+
+    static HexMapCamera _instance;
+    
     [SerializeField] float _stickMinZoom = -250, _stickMaxZoom = -45;
     [SerializeField] float _swivelMinZoom = 90, _swivelMaxZoom = 45;
     [SerializeField] float _moveSpeedMinZoom = 400, _moveSpeedMaxZoom = 100;
@@ -14,6 +21,8 @@ public class HexMapCamera : MonoBehaviour
 
     void Awake()
     {
+        _instance = this;
+
         _swivel = transform.GetChild(0);
         _stick = _swivel.GetChild(0);
 
@@ -37,6 +46,8 @@ public class HexMapCamera : MonoBehaviour
         if (xDelta != 0f || zDelta != 0f)
             AdjustPosition(xDelta, zDelta);
     }
+
+    public static void ValidatePosition() => _instance.AdjustPosition(0f, 0f);
 
     void AdjustRotation(float delta)
     {
@@ -68,10 +79,10 @@ public class HexMapCamera : MonoBehaviour
 
     Vector3 ClampPosition(Vector3 position)
     {
-        float xMax = (_grid.ChunkCountX * HexMetrics.ChunkSizeX - 0.5f) * (2f * HexMetrics.InnerRadius);
+        float xMax = (_grid.CellCountX * HexMetrics.ChunkSizeX - 0.5f) * (2f * HexMetrics.InnerRadius);
         position.x = Mathf.Clamp(position.x, 0f, xMax + 10);
 
-        float zMax = (_grid.ChunkCountZ * HexMetrics.ChunkSizeZ -1) * (1.5f * HexMetrics.OuterRadius);
+        float zMax = (_grid.CellCountZ * HexMetrics.ChunkSizeZ -1) * (1.5f * HexMetrics.OuterRadius);
         position.z = Mathf.Clamp(position.z, 40f, zMax);
 
         return position;

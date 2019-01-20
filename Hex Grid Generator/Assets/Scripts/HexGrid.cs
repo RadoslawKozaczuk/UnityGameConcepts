@@ -9,21 +9,38 @@ public class HexGrid : MonoBehaviour
     public Text CellLabelPrefab;
     public Texture2D NoiseSource;
     public HexGridChunk ChunkPrefab;
-    public int ChunkCountX = 4, ChunkCountZ = 3;
+    public int CellCountX = 10, CellCountZ = 5;
     public int Seed;
 
     HexCell[] _cells;
     HexGridChunk[] _chunks;
-    int _cellCountX, _cellCountZ;
+    int _chunkCountX, _chunkCountZ;
 
     void Awake()
     {
         HexMetrics.NoiseSource = NoiseSource;
         FeatureManager.InitializeHashGrid(Seed);
         HexMetrics.Colors = Colors;
+        CreateMap(CellCountX, CellCountZ);
+    }
 
-        _cellCountX = ChunkCountX * HexMetrics.ChunkSizeX;
-        _cellCountZ = ChunkCountZ * HexMetrics.ChunkSizeZ;
+    public void CreateMap(int x, int z)
+    {
+        if (x <= 0 || x % HexMetrics.ChunkSizeX != 0 || z <= 0 || z % HexMetrics.ChunkSizeZ != 0)
+        {
+            Debug.LogError("Unsupported map size.");
+            return;
+        }
+
+        if (_chunks != null)
+            for (int i = 0; i < _chunks.Length; i++)
+                Destroy(_chunks[i].gameObject);
+
+        CellCountX = x;
+        CellCountZ = z;
+
+        _chunkCountX = CellCountX / HexMetrics.ChunkSizeX;
+        _chunkCountZ = CellCountZ / HexMetrics.ChunkSizeZ;
 
         CreateChunks();
         CreateCells();
@@ -42,12 +59,12 @@ public class HexGrid : MonoBehaviour
     public HexCell GetCell(HexCoordinates coordinates)
     {
         int z = coordinates.Z;
-        if (z < 0 || z >= _cellCountZ) return null;
+        if (z < 0 || z >= CellCountZ) return null;
 
         int x = coordinates.X + z / 2;
-        if (x < 0 || x >= _cellCountX) return null;
+        if (x < 0 || x >= CellCountX) return null;
         
-        return _cells[x + z * _cellCountX];
+        return _cells[x + z * CellCountX];
     }
 
     public void ShowUI(bool visible)
@@ -58,12 +75,17 @@ public class HexGrid : MonoBehaviour
 
     public void Save(BinaryWriter writer)
     {
+        writer.Write(CellCountX);
+        writer.Write(CellCountZ);
+
         for (int i = 0; i < _cells.Length; i++)
             _cells[i].Save(writer);
     }
 
     public void Load(BinaryReader reader)
     {
+        CreateMap(reader.ReadInt32(), reader.ReadInt32());
+
         for (int i = 0; i < _cells.Length; i++)
             _cells[i].Load(reader);
 
@@ -76,16 +98,16 @@ public class HexGrid : MonoBehaviour
     {
         position = transform.InverseTransformPoint(position);
         HexCoordinates coordinates = HexCoordinates.FromPosition(position);
-        int index = coordinates.X + coordinates.Z * _cellCountX + coordinates.Z / 2;
+        int index = coordinates.X + coordinates.Z * CellCountX + coordinates.Z / 2;
         return _cells[index];
     }
 
     void CreateChunks()
     {
-        _chunks = new HexGridChunk[ChunkCountX * ChunkCountZ];
+        _chunks = new HexGridChunk[_chunkCountX * _chunkCountZ];
 
-        for (int z = 0, i = 0; z < ChunkCountZ; z++)
-            for (int x = 0; x < ChunkCountX; x++)
+        for (int z = 0, i = 0; z < _chunkCountZ; z++)
+            for (int x = 0; x < _chunkCountX; x++)
             {
                 HexGridChunk chunk = _chunks[i++] = Instantiate(ChunkPrefab);
                 chunk.transform.SetParent(transform);
@@ -94,10 +116,10 @@ public class HexGrid : MonoBehaviour
 
     void CreateCells()
     {
-        _cells = new HexCell[_cellCountX * _cellCountZ];
+        _cells = new HexCell[CellCountX * CellCountZ];
 
-        for (int z = 0, i = 0; z < _cellCountZ; z++)
-            for (int x = 0; x < _cellCountX; x++)
+        for (int z = 0, i = 0; z < CellCountZ; z++)
+            for (int x = 0; x < CellCountX; x++)
                 CreateCell(x, z, i++);
     }
 
@@ -129,17 +151,17 @@ public class HexGrid : MonoBehaviour
             // Let's first deal with the even rows. As all cells in such rows have a SE neighbor, we can connect to those.
             if ((z & 1) == 0) // bitwise and used as a mask to get an even number (even number always has 0 as last number)
             {
-                cell.SetNeighbor(HexDirection.SouthEast, _cells[i - _cellCountX]);
+                cell.SetNeighbor(HexDirection.SouthEast, _cells[i - CellCountX]);
                 // We can connect to the SW neighbors as well. Except for the first cell in each row, as it doesn't have one.
                 if (x > 0)
-                    cell.SetNeighbor(HexDirection.SouthWest, _cells[i - _cellCountX - 1]);
+                    cell.SetNeighbor(HexDirection.SouthWest, _cells[i - CellCountX - 1]);
             }
             // The odds rows follow the same logic, but mirrored. Once that's done, all neighbors in our grid are connected.
             else
             {
-                cell.SetNeighbor(HexDirection.SouthWest, _cells[i - _cellCountX]);
-                if (x < _cellCountX - 1)
-                    cell.SetNeighbor(HexDirection.SouthEast, _cells[i - _cellCountX + 1]);
+                cell.SetNeighbor(HexDirection.SouthWest, _cells[i - CellCountX]);
+                if (x < CellCountX - 1)
+                    cell.SetNeighbor(HexDirection.SouthEast, _cells[i - CellCountX + 1]);
             }
         }
         // Not every cell is connected to exactly six neighbors. 
@@ -162,7 +184,7 @@ public class HexGrid : MonoBehaviour
     {
         int chunkX = x / HexMetrics.ChunkSizeX;
         int chunkZ = z / HexMetrics.ChunkSizeZ;
-        HexGridChunk chunk = _chunks[chunkX + chunkZ * ChunkCountX];
+        HexGridChunk chunk = _chunks[chunkX + chunkZ * _chunkCountX];
 
         int localX = x - chunkX * HexMetrics.ChunkSizeX;
         int localZ = z - chunkZ * HexMetrics.ChunkSizeZ;

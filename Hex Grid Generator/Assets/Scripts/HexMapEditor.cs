@@ -42,6 +42,7 @@ public class HexMapEditor : MonoBehaviour
         using (BinaryReader reader = new BinaryReader(File.OpenRead(path)))
         {
             _hexGrid.Load(reader);
+            HexMapCamera.ValidatePosition();
         }
     }
 
