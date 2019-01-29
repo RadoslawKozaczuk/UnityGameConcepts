@@ -25,11 +25,11 @@ namespace Assets.Editor
 
 			var firstPassList = GetFirstPassList();
 			var allFirstpassTypes = GetAllFirstpassClasses();
-			CollectionCodeFileDictionary(allFirstpassTypes, firstPassList);
+			CollectionCodeFileDictionary(allFirstpassTypes, firstPassList, "searching files phase 1");
 
 			var codes = Directory.GetFiles("Assets", "*.cs", SearchOption.AllDirectories);
 			var alltypes = GetAllClassTypes();
-			CollectionCodeFileDictionary(alltypes, codes);
+			CollectionCodeFileDictionary(alltypes, codes, "searching files phase 2");
 			alltypes.AddRange(allFirstpassTypes);
 
 			float count = 0;
@@ -64,14 +64,15 @@ namespace Assets.Editor
 			return newArray;
 		}
 
-		void CollectionCodeFileDictionary(List<Type> alltypes, string[] codes)
+		void CollectionCodeFileDictionary(List<Type> alltypes, string[] codes, string progressBarDescription)
 		{
 			float count = 0;
 			foreach (var codePath in codes)
 			{
-				EditorUtility.DisplayProgressBar(ProgressBarTitle, "search files", ++count / codes.Length);
+				EditorUtility.DisplayProgressBar(ProgressBarTitle, progressBarDescription, ++count / codes.Length);
 
-				var code = Regex.Replace(File.ReadAllText(codePath), @"\s", "");
+				var code = File.ReadAllText(codePath);
+				code = Regex.Replace(code, @"\s", "");
 
 				foreach (var type in alltypes)
 				{
@@ -87,17 +88,14 @@ namespace Assets.Editor
 
 					var list = CodeFileList[type];
 
-					if (Regex.IsMatch(code, string.Format("enum{0}|delegate{0}", type.Name)))
-						list.Add(AssetDatabase.AssetPathToGUID(codePath));
-					else
-					{
-						string typeName = type.IsGenericTypeDefinition
-							? type.GetGenericTypeDefinition().Name.Split('`')[0]
-							: type.Name;
+					string typeName = type.IsGenericTypeDefinition
+						? type.GetGenericTypeDefinition().Name.Split('`')[0]
+						: type.Name;
 
-						if (Regex.IsMatch(code, string.Format("class{0}|struct{0}", typeName)))
-							list.Add(AssetDatabase.AssetPathToGUID(codePath));
-					}
+					if (Regex.IsMatch(code, string.Format("class{0}|struct{0}", typeName)))
+						list.Add(AssetDatabase.AssetPathToGUID(codePath));
+					else if (Regex.IsMatch(code, string.Format("enum{0}|delegate{0}", type.Name)))
+						list.Add(AssetDatabase.AssetPathToGUID(codePath));
 				}
 			}
 		}

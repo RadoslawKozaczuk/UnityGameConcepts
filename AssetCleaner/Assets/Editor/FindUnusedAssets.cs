@@ -8,20 +8,20 @@ namespace Assets.Editor
 {
 	public class FindUnusedAssets : EditorWindow
 	{
-		const string ComponentsDir = "Assets/Components";
+		public const string ComponentsDir = "Assets/Components";
 		const string ResourcesDir = "Assets/Resources";
 
 		enum SearchDirectories
 		{
 			Components, Resources
 		}
+		SearchDirectories _chosenDirectory = SearchDirectories.Components;
 
 		AssetCollector _collection = new AssetCollector();
 		List<DeleteAsset> _deleteAssets = new List<DeleteAsset>();
 		Vector2 _scroll;
-		bool _selectAllValue;
-		bool _selectAllHasChanged;
-
+		bool _deleteAll = true;
+		bool _deleteAllHasChanged;
 		bool _saveEditorExtensions;
 
 		//[MenuItem("Assets/Delete Unused Assets", false, 50)]
@@ -30,7 +30,6 @@ namespace Assets.Editor
 		//	var window = CreateInstance<FindUnusedAssets>();
 		//	window.Show();
 		//}
-
 
 		[MenuItem("Assets/Delete Unused Assets/unused by editor", false, 51)]
 		static void InitWithout()
@@ -55,7 +54,7 @@ namespace Assets.Editor
 		// similar to any Update function.
 		// Except it is not called once per frame but it is called one or more times per interaction.
 		// So whenever we click or move the mouse or press a button etc.
-		void OnGui()
+		void OnGUI()
 		{
 			//using (var horizontal = new EditorGUILayout.HorizontalScope("box"))
 			//{
@@ -63,11 +62,10 @@ namespace Assets.Editor
 			//}
 
 			EditorGUILayout.BeginHorizontal();
-			_saveEditorExtensions = EditorGUILayout.Toggle("Exclude objects that reference from scenes", _selectAllValue);
-
-			SearchDirectories trwr = SearchDirectories.Components;
-			EditorGUILayout.EnumPopup(trwr);
+			_saveEditorExtensions = EditorGUILayout.Toggle("Exclude objects that reference from scenes", _saveEditorExtensions);
+			_chosenDirectory = (SearchDirectories)EditorGUILayout.EnumPopup(_chosenDirectory);
 			EditorGUILayout.EndHorizontal();
+
 			/*
 				In Editor scripting, you will see functions which begin with 'Begin' or 'End'.
 				You may treat these similarly to curly braces (except no compiler error will be thrown
@@ -92,10 +90,10 @@ namespace Assets.Editor
 			{
 				_scroll = scrollScope.scrollPosition;
 
-				var everyFrameValue = EditorGUILayout.Toggle("select all", _selectAllValue);
-				if (everyFrameValue != _selectAllValue)
-					_selectAllHasChanged = true;
-				_selectAllValue = everyFrameValue;
+				var everyFrameValue = EditorGUILayout.Toggle("select all", _deleteAll);
+				if (everyFrameValue != _deleteAll)
+					_deleteAllHasChanged = true;
+				_deleteAll = everyFrameValue;
 
 				foreach (var asset in _deleteAssets)
 				{
@@ -104,7 +102,11 @@ namespace Assets.Editor
 
 					using (var horizontal = new EditorGUILayout.HorizontalScope())
 					{
+						if (_deleteAllHasChanged)
+							asset.IsDelete = _deleteAll;
+
 						asset.IsDelete = EditorGUILayout.Toggle(asset.IsDelete, GUILayout.Width(20));
+
 						var icon = AssetDatabase.GetCachedIcon(asset.Path);
 						GUILayout.Label(icon, GUILayout.Width(20), GUILayout.Height(20));
 						if (GUILayout.Button(asset.Path, EditorStyles.largeLabel))

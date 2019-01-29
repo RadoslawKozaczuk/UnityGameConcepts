@@ -60,7 +60,7 @@ namespace Assets.Editor
 
 		void UnregistReferenceFromResources()
 		{
-			var allFiles = Directory.GetFiles("Assets/Components/Menu/Sprites", "*.*", SearchOption.AllDirectories);
+			var allFiles = Directory.GetFiles(FindUnusedAssets.ComponentsDir, "*.*", SearchOption.AllDirectories);
 			var filtered = new List<string>();
 
 			for (int i = 0; i < allFiles.Length; i++)

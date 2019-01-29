@@ -19,7 +19,7 @@ namespace Assets.Editor
 
 		void CollectionShaderFiles()
 		{
-			var shaderFiles = Directory.GetFiles("Assets", "*.shader", SearchOption.AllDirectories);
+			var shaderFiles = Directory.GetFiles(FindUnusedAssets.ComponentsDir, "*.shader", SearchOption.AllDirectories);
 			foreach (var shaderFilePath in shaderFiles)
 			{
 				var code = File.ReadAllText(shaderFilePath);
@@ -33,14 +33,14 @@ namespace Assets.Editor
 				}
 			}
 
-			var cgFiles = Directory.GetFiles("Assets", "*.cg", SearchOption.AllDirectories);
+			var cgFiles = Directory.GetFiles(FindUnusedAssets.ComponentsDir, "*.cg", SearchOption.AllDirectories);
 			foreach (var cgFilePath in cgFiles)
 			{
 				var file = Path.GetFileName(cgFilePath);
 				ShaderFileList.Add(file, cgFilePath);
 			}
 
-			var cgincFiles = Directory.GetFiles("Assets", "*.cginc", SearchOption.AllDirectories);
+			var cgincFiles = Directory.GetFiles(FindUnusedAssets.ComponentsDir, "*.cginc", SearchOption.AllDirectories);
 			foreach (var cgincPath in cgincFiles)
 			{
 				var file = Path.GetFileName(cgincPath);
