@@ -12,6 +12,8 @@ namespace Assets.Editor
 		readonly ClassReferenceCollection _classCollection = new ClassReferenceCollection();
 		readonly ShaderReferenceCollection _shaderCollection = new ShaderReferenceCollection();
 
+		const string ProgressBarTitle = "Searching for unused assets";
+
 		public void Collection(string directory, bool saveEditorExtensions)
 		{
 			try
@@ -40,15 +42,17 @@ namespace Assets.Editor
 						continue;
 
 					DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
+
+					EditorUtility.DisplayProgressBar(ProgressBarTitle, "collection all type", files.Length / i * 0.2f);
 				}
 
-				EditorUtility.DisplayProgressBar("checking", "collection all files", 0.2f);
+				EditorUtility.DisplayProgressBar(ProgressBarTitle, "collection all files", 0.2f);
 				UnregistReferenceFromResources();
 
-				EditorUtility.DisplayProgressBar("checking", "check reference from resources", 0.4f);
+				EditorUtility.DisplayProgressBar(ProgressBarTitle, "check reference from resources", 0.4f);
 				UnregistReferenceFromScenes();
 
-				EditorUtility.DisplayProgressBar("checking", "check reference from scenes", 0.6f);
+				EditorUtility.DisplayProgressBar(ProgressBarTitle, "check reference from scenes", 0.6f);
 				if (saveEditorExtensions)
 					UnregistEditorCodes();
 			}
