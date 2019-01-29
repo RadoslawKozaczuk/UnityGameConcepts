@@ -1,24 +1,15 @@
-﻿/**
-	asset cleaner
-	Copyright (c) 2015 Tatsuhiko Yamamura
-
-    This software is released under the MIT License.
-    http://opensource.org/licenses/mit-license.php
-*/
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEditor;
 
-namespace AssetClean
+namespace Assets.Editor
 {
 	public class ShaderReferenceCollection
 	{
 		// shader name / shader file guid
-		public Dictionary<string, string> shaderFileList = new Dictionary<string, string>();
-		public Dictionary<string, List<string>> shaderReferenceList = new Dictionary<string, List<string>>();
+		public Dictionary<string, string> ShaderFileList = new Dictionary<string, string>();
+		public Dictionary<string, List<string>> ShaderReferenceList = new Dictionary<string, List<string>>();
 
 		public void Collection()
 		{
@@ -36,9 +27,9 @@ namespace AssetClean
 				if (match.Success)
 				{
 					var shaderName = match.Groups["name"].ToString();
-					if (shaderFileList.ContainsKey(shaderName) == false)
+					if (ShaderFileList.ContainsKey(shaderName) == false)
 					{
-						shaderFileList.Add(shaderName, AssetDatabase.AssetPathToGUID(shaderFilePath));
+						ShaderFileList.Add(shaderName, AssetDatabase.AssetPathToGUID(shaderFilePath));
 					}
 				}
 			}
@@ -47,34 +38,34 @@ namespace AssetClean
 			foreach (var cgFilePath in cgFiles)
 			{
 				var file = Path.GetFileName(cgFilePath);
-				shaderFileList.Add(file, cgFilePath);
+				ShaderFileList.Add(file, cgFilePath);
 			}
 
 			var cgincFiles = Directory.GetFiles("Assets", "*.cginc", SearchOption.AllDirectories);
 			foreach (var cgincPath in cgincFiles)
 			{
 				var file = Path.GetFileName(cgincPath);
-				shaderFileList.Add(file, cgincPath);
+				ShaderFileList.Add(file, cgincPath);
 			}
 		}
 
 		void CheckReference()
 		{
-			foreach (var shader in shaderFileList)
+			foreach (var shader in ShaderFileList)
 			{
 				var shaderFilePath = AssetDatabase.GUIDToAssetPath(shader.Value);
 				var shaderName = shader.Key;
 
 				List<string> referenceList = new List<string>();
-				shaderReferenceList.Add(shaderName, referenceList);
+				ShaderReferenceList.Add(shaderName, referenceList);
 
 				var code = File.ReadAllText(shaderFilePath);
 
-				foreach (var checkingShaderName in shaderFileList.Keys)
+				foreach (var checkingShaderName in ShaderFileList.Keys)
 				{
-					if (Regex.IsMatch(code, string.Format("{0}", checkingShaderName)))
+					if (Regex.IsMatch(code, $"{checkingShaderName}"))
 					{
-						var filePath = shaderFileList[checkingShaderName];
+						var filePath = ShaderFileList[checkingShaderName];
 						referenceList.Add(filePath);
 					}
 				}

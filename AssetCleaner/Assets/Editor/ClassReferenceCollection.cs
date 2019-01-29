@@ -1,31 +1,22 @@
-﻿/**
-	asset cleaner
-	Copyright (c) 2015 Tatsuhiko Yamamura
-
-    This software is released under the MIT License.
-    http://opensource.org/licenses/mit-license.php
-*/
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using System.IO;
-using System.Reflection;
-using System.Linq;
 
-namespace AssetClean
+namespace Assets.Editor
 {
 	public class ClassReferenceCollection
 	{
 		// type : guid
-		public Dictionary<System.Type, List<string>> codeFileList = new Dictionary<System.Type, List<string>>();
+		public Dictionary<System.Type, List<string>> CodeFileList = new Dictionary<System.Type, List<string>>();
 		// guid : types
-		public Dictionary<string, List<System.Type>> references = new Dictionary<string, List<System.Type>>();
+		public Dictionary<string, List<System.Type>> References = new Dictionary<string, List<System.Type>>();
 
 		public void Collection()
 		{
-			references.Clear();
+			References.Clear();
 			EditorUtility.DisplayProgressBar("checking", "collection all type", 0);
 
 			// Connect the files and class.
@@ -37,7 +28,7 @@ namespace AssetClean
 			if (Directory.Exists("Assets/Standard Assets"))
 				firstPassList.AddRange(Directory.GetFiles("Assets/Standard Assets", "*.cs", SearchOption.AllDirectories));
 
-			var allFirstpassTypes = collectionAllFastspassClasses();
+			var allFirstpassTypes = CollectionAllFastspassClasses();
 			CollectionCodeFileDictionary(allFirstpassTypes, firstPassList.ToArray());
 
 
@@ -67,22 +58,22 @@ namespace AssetClean
 				EditorUtility.DisplayProgressBar("checking", "search files", count++ / codes.Length);
 
 				// connect file and classes.
-				var code = System.IO.File.ReadAllText(codePath);
+				var code = File.ReadAllText(codePath);
 				code = Regex.Replace(code, "//.*[\\n\\r]", "");
 				code = Regex.Replace(code, "/\\*.*[\\n\\r]\\*/", "");
 
 				foreach (var type in alltypes)
 				{
 
-					if (codeFileList.ContainsKey(type) == false)
+					if (CodeFileList.ContainsKey(type) == false)
 					{
-						codeFileList.Add(type, new List<string>());
+						CodeFileList.Add(type, new List<string>());
 					}
-					var list = codeFileList[type];
+					var list = CodeFileList[type];
 
 					if (string.IsNullOrEmpty(type.Namespace) == false)
 					{
-						var namespacepattern = string.Format("namespace[\\s.]{0}[{{\\s\\n]", type.Namespace);
+						var namespacepattern = $"namespace[\\s.]{type.Namespace}[{{\\s\\n]";
 						if (Regex.IsMatch(code, namespacepattern) == false)
 						{
 							continue;
@@ -90,28 +81,27 @@ namespace AssetClean
 					}
 
 					string typeName = type.IsGenericTypeDefinition ? type.GetGenericTypeDefinition().Name.Split('`')[0] : type.Name;
-					if (Regex.IsMatch(code, string.Format("class\\s*{0}?[\\s:<{{]", typeName)))
+					if (Regex.IsMatch(code, $"class\\s*{typeName}?[\\s:<{{]"))
 					{
 						list.Add(AssetDatabase.AssetPathToGUID(codePath));
 						continue;
 					}
 
-					if (Regex.IsMatch(code, string.Format("struct\\s*{0}[\\s:<{{]", typeName)))
+					if (Regex.IsMatch(code, $"struct\\s*{typeName}[\\s:<{{]"))
 					{
 						list.Add(AssetDatabase.AssetPathToGUID(codePath));
 						continue;
 					}
 
-					if (Regex.IsMatch(code, string.Format("enum\\s*{0}[\\s{{]", type.Name)))
+					if (Regex.IsMatch(code, $"enum\\s*{type.Name}[\\s{{]"))
 					{
 						list.Add(AssetDatabase.AssetPathToGUID(codePath));
 						continue;
 					}
 
-					if (Regex.IsMatch(code, string.Format("delegate\\s*{0}\\s\\(", type.Name)))
+					if (Regex.IsMatch(code, $"delegate\\s*{type.Name}\\s\\("))
 					{
 						list.Add(AssetDatabase.AssetPathToGUID(codePath));
-						continue;
 					}
 				}
 			}
@@ -129,7 +119,7 @@ namespace AssetClean
 			return alltypes.ToList();
 		}
 
-		List<System.Type> collectionAllFastspassClasses()
+		List<System.Type> CollectionAllFastspassClasses()
 		{
 			List<System.Type> alltypes = new List<System.Type>();
 			if (File.Exists("Library/ScriptAssemblies/Assembly-CSharp-firstpass.dll"))
@@ -142,53 +132,45 @@ namespace AssetClean
 		void CollectionReferenceClasses(string guid, List<System.Type> types)
 		{
 			var codePath = AssetDatabase.GUIDToAssetPath(guid);
-			if (string.IsNullOrEmpty(codePath) || references.ContainsKey(guid) || File.Exists(codePath) == false)
+			if (string.IsNullOrEmpty(codePath) || References.ContainsKey(guid) || File.Exists(codePath) == false)
 			{
 				return;
 			}
 
-			var code = System.IO.File.ReadAllText(codePath);
+			var code = File.ReadAllText(codePath);
 			code = Regex.Replace(code, "//.*[\\n\\r]", "");
 			code = Regex.Replace(code, "/\\*.*[\\n\\r]\\*/", "");
 
 			var list = new List<System.Type>();
-			references[guid] = list;
+			References[guid] = list;
 
 			foreach (var type in types)
 			{
 
 				if (string.IsNullOrEmpty(type.Namespace) == false)
 				{
-					var namespacepattern = string.Format("[namespace|using][\\s\\.]{0}[{{\\s\\r\\n\\r;]", type.Namespace);
+					var namespacepattern = $"[namespace|using][\\s\\.]{type.Namespace}[{{\\s\\r\\n\\r;]";
 					if (Regex.IsMatch(code, namespacepattern) == false)
 					{
 						continue;
 					}
 				}
 
-				if (codeFileList.ContainsKey(type) == false)
+				if (CodeFileList.ContainsKey(type) == false)
 				{
 					continue;
 				}
 
-				string match = string.Empty;
-				if (type.IsGenericTypeDefinition)
+				string match = type.IsGenericTypeDefinition
+					? $"[\\]\\[\\.\\s<(]{type.GetGenericTypeDefinition().Name.Split('`')[0]}[\\.\\s\\n\\r>,<(){{]"
+					: $"[\\]\\[\\.\\s<(]{type.Name.Replace("Attribute", "")}[\\.\\s\\n\\r>,<(){{\\]]";
+
+				if (!Regex.IsMatch(code, match)) continue;
+				list.Add(type);
+				var typeGuid = CodeFileList[type];
+				foreach (var referenceGuid in typeGuid)
 				{
-					string typeName = type.GetGenericTypeDefinition().Name.Split('`')[0];
-					match = string.Format("[\\]\\[\\.\\s<(]{0}[\\.\\s\\n\\r>,<(){{]", typeName);
-				}
-				else
-				{
-					match = string.Format("[\\]\\[\\.\\s<(]{0}[\\.\\s\\n\\r>,<(){{\\]]", type.Name.Replace("Attribute", ""));
-				}
-				if (Regex.IsMatch(code, match))
-				{
-					list.Add(type);
-					var typeGuid = codeFileList[type];
-					foreach (var referenceGuid in typeGuid)
-					{
-						CollectionReferenceClasses(referenceGuid, types);
-					}
+					CollectionReferenceClasses(referenceGuid, types);
 				}
 			}
 		}
