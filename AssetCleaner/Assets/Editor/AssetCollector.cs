@@ -9,8 +9,8 @@ namespace Assets.Editor
 	public class AssetCollector
 	{
 		public List<string> DeleteFileList = new List<string>();
-		ClassReferenceCollection _classCollection = new ClassReferenceCollection();
-		ShaderReferenceCollection _shaderCollection = new ShaderReferenceCollection();
+		readonly ClassReferenceCollection _classCollection = new ClassReferenceCollection();
+		readonly ShaderReferenceCollection _shaderCollection = new ShaderReferenceCollection();
 
 		public bool UseCodeStrip = true;
 		public bool SaveEditorExtensions = true;
@@ -22,9 +22,8 @@ namespace Assets.Editor
 				DeleteFileList.Clear();
 
 				if (UseCodeStrip)
-				{
 					_classCollection.Collection();
-				}
+
 				_shaderCollection.Collection();
 
 				// Find assets
@@ -36,23 +35,23 @@ namespace Assets.Editor
 					var path = files[i];
 					var extension = Path.GetExtension(path);
 
-					if (extension != ".meta"
-					    && extension != ".js"
-					    && extension != ".dll"
-					    && !Regex.IsMatch(path, "[\\/\\\\]Gizmos[\\/\\\\]")
-					    && !Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]Android[\\/\\\\]")
-					    && !Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]iOS[\\/\\\\]")
-					    && !Regex.IsMatch(path, "[\\/\\\\]Resources[\\/\\\\]"))
+					if (extension == ".meta"
+					    || extension == ".js"
+					    || extension == ".dll"
+					    || Regex.IsMatch(path, "[\\/\\\\]Gizmos[\\/\\\\]")
+					    || Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]Android[\\/\\\\]")
+					    || Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]iOS[\\/\\\\]")
+					    || Regex.IsMatch(path, "[\\/\\\\]Resources[\\/\\\\]"))
+						continue;
+
+					if (UseCodeStrip == false)
 					{
-						if (UseCodeStrip == false)
-						{
-							if (extension != ".cs")
-								DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
-						}
-						else
-						{
+						if (extension != ".cs")
 							DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
-						}
+					}
+					else
+					{
+						DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
 					}
 				}
 
@@ -70,9 +69,7 @@ namespace Assets.Editor
 
 				EditorUtility.DisplayProgressBar("checking", "check reference from scenes", 0.6f);
 				if (SaveEditorExtensions)
-				{
 					UnregistEditorCodes();
-				}
 			}
 			finally
 			{
@@ -132,33 +129,25 @@ namespace Assets.Editor
 				}
 
 				foreach (var undeleteClass in undeleteClassList)
-				{
 					if (Regex.IsMatch(code, $"\\[CustomEditor.*\\(\\s*{undeleteClass.Name}\\s*\\).*\\]"))
-					{
 						UnregistFromDelteList(path);
-					}
-				}
 			}
 		}
 
 		void UnregistFromDelteList(string guid)
 		{
-			if (DeleteFileList.Contains(guid) == false)
-			{
+			if (!DeleteFileList.Contains(guid))
 				return;
-			}
+
 			DeleteFileList.Remove(guid);
 
 			if (_classCollection.References.ContainsKey(guid))
 			{
-
 				foreach (var type in _classCollection.References[guid])
 				{
 					var codePaths = _classCollection.CodeFileList[type];
 					foreach (var codePath in codePaths)
-					{
 						UnregistFromDelteList(codePath);
-					}
 				}
 			}
 
@@ -168,9 +157,7 @@ namespace Assets.Editor
 			var shader = _shaderCollection.ShaderFileList.First(item => item.Value == guid);
 			var shaderAssets = _shaderCollection.ShaderReferenceList[shader.Key];
 			foreach (var shaderPath in shaderAssets)
-			{
 				UnregistFromDelteList(shaderPath);
-			}
 		}
 	}
 }

@@ -79,7 +79,6 @@ namespace Assets.Editor
 					}
 				}
 			}
-
 		}
 
 		static void CleanDir()
@@ -123,9 +122,7 @@ namespace Assets.Editor
 
 				EditorUtility.DisplayProgressBar("clean directory", "", 1);
 				foreach (var dir in Directory.GetDirectories("Assets"))
-				{
 					RemoveEmptyDirectory(dir);
-				}
 
 				System.Diagnostics.Process.Start(exportDirectry);
 
