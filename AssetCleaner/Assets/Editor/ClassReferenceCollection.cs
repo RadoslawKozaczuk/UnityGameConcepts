@@ -66,9 +66,8 @@ namespace Assets.Editor
 				{
 
 					if (CodeFileList.ContainsKey(type) == false)
-					{
 						CodeFileList.Add(type, new List<string>());
-					}
+
 					var list = CodeFileList[type];
 
 					if (string.IsNullOrEmpty(type.Namespace) == false)
@@ -132,10 +131,8 @@ namespace Assets.Editor
 		void CollectionReferenceClasses(string guid, List<System.Type> types)
 		{
 			var codePath = AssetDatabase.GUIDToAssetPath(guid);
-			if (string.IsNullOrEmpty(codePath) || References.ContainsKey(guid) || File.Exists(codePath) == false)
-			{
+			if (string.IsNullOrEmpty(codePath) || References.ContainsKey(guid) || !File.Exists(codePath))
 				return;
-			}
 
 			var code = File.ReadAllText(codePath);
 			code = Regex.Replace(code, "//.*[\\n\\r]", "");
@@ -146,32 +143,27 @@ namespace Assets.Editor
 
 			foreach (var type in types)
 			{
-
-				if (string.IsNullOrEmpty(type.Namespace) == false)
+				if (!string.IsNullOrEmpty(type.Namespace))
 				{
 					var namespacepattern = $"[namespace|using][\\s\\.]{type.Namespace}[{{\\s\\r\\n\\r;]";
-					if (Regex.IsMatch(code, namespacepattern) == false)
-					{
+					if (!Regex.IsMatch(code, namespacepattern))
 						continue;
-					}
 				}
 
-				if (CodeFileList.ContainsKey(type) == false)
-				{
+				if (!CodeFileList.ContainsKey(type))
 					continue;
-				}
 
 				string match = type.IsGenericTypeDefinition
 					? $"[\\]\\[\\.\\s<(]{type.GetGenericTypeDefinition().Name.Split('`')[0]}[\\.\\s\\n\\r>,<(){{]"
 					: $"[\\]\\[\\.\\s<(]{type.Name.Replace("Attribute", "")}[\\.\\s\\n\\r>,<(){{\\]]";
 
-				if (!Regex.IsMatch(code, match)) continue;
+				if (!Regex.IsMatch(code, match))
+					continue;
+
 				list.Add(type);
 				var typeGuid = CodeFileList[type];
 				foreach (var referenceGuid in typeGuid)
-				{
 					CollectionReferenceClasses(referenceGuid, types);
-				}
 			}
 		}
 	}

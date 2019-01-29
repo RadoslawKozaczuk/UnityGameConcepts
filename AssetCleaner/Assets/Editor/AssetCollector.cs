@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using UnityEngine;
 
 namespace Assets.Editor
 {
@@ -29,18 +28,32 @@ namespace Assets.Editor
 				_shaderCollection.Collection();
 
 				// Find assets
-				var files = Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories)
-					.Where(item => Path.GetExtension(item) != ".meta")
-					.Where(item => Path.GetExtension(item) != ".js")
-					.Where(item => Path.GetExtension(item) != ".dll")
-					.Where(item => Regex.IsMatch(item, "[\\/\\\\]Gizmos[\\/\\\\]") == false)
-					.Where(item => Regex.IsMatch(item, "[\\/\\\\]Plugins[\\/\\\\]Android[\\/\\\\]") == false)
-					.Where(item => Regex.IsMatch(item, "[\\/\\\\]Plugins[\\/\\\\]iOS[\\/\\\\]") == false)
-					.Where(item => Regex.IsMatch(item, "[\\/\\\\]Resources[\\/\\\\]") == false);
+				var files = Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories);
 
-				if (UseCodeStrip == false)
+				// filter files
+				for (int i = 0; i < files.Length; i++)
 				{
-					files = files.Where(item => Path.GetExtension(item) != ".cs");
+					var path = files[i];
+					var extension = Path.GetExtension(path);
+
+					if (extension != ".meta"
+					    && extension != ".js"
+					    && extension != ".dll"
+					    && !Regex.IsMatch(path, "[\\/\\\\]Gizmos[\\/\\\\]")
+					    && !Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]Android[\\/\\\\]")
+					    && !Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]iOS[\\/\\\\]")
+					    && !Regex.IsMatch(path, "[\\/\\\\]Resources[\\/\\\\]"))
+					{
+						if (UseCodeStrip == false)
+						{
+							if (extension != ".cs")
+								DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
+						}
+						else
+						{
+							DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
+						}
+					}
 				}
 
 				foreach (var path in files)
@@ -48,6 +61,7 @@ namespace Assets.Editor
 					var guid = AssetDatabase.AssetPathToGUID(path);
 					DeleteFileList.Add(guid);
 				}
+
 				EditorUtility.DisplayProgressBar("checking", "collection all files", 0.2f);
 				UnregistReferenceFromResources();
 
@@ -67,14 +81,18 @@ namespace Assets.Editor
 		}
 		void UnregistReferenceFromResources()
 		{
-			var resourcesFiles = Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories)
-				.Where(item => Regex.IsMatch(item, "[\\/\\\\]Resources[\\/\\\\]"))
-					.Where(item => Path.GetExtension(item) != ".meta")
-					.ToArray();
-			foreach (var path in AssetDatabase.GetDependencies(resourcesFiles))
+			var allFiles = Directory.GetFiles("Assets/Components/Menu/Sprites", "*.*", SearchOption.AllDirectories);
+			var filtered = new List<string>();
+
+			for (int i = 0; i < allFiles.Length; i++)
 			{
-				UnregistFromDelteList(AssetDatabase.AssetPathToGUID(path));
+				var item = allFiles[i];
+				if (Regex.IsMatch(item, "[\\/\\\\]Resources[\\/\\\\]") && Path.GetExtension(item) != ".meta")
+					filtered.Add(item);
 			}
+
+			foreach (var path in AssetDatabase.GetDependencies(filtered.ToArray()))
+				UnregistFromDelteList(AssetDatabase.AssetPathToGUID(path));
 		}
 
 		void UnregistReferenceFromScenes()
@@ -84,14 +102,9 @@ namespace Assets.Editor
 				.Where(item => item.enabled)
 					.Select(item => item.path)
 					.ToArray();
+
 			foreach (var path in AssetDatabase.GetDependencies(scenes))
-			{
-				if (SaveEditorExtensions == false)
-				{
-					Debug.Log(path);
-				}
 				UnregistFromDelteList(AssetDatabase.AssetPathToGUID(path));
-			}
 		}
 
 		void UnregistEditorCodes()
@@ -149,7 +162,8 @@ namespace Assets.Editor
 				}
 			}
 
-			if (!_shaderCollection.ShaderFileList.ContainsValue(guid)) return;
+			if (!_shaderCollection.ShaderFileList.ContainsValue(guid))
+				return;
 
 			var shader = _shaderCollection.ShaderFileList.First(item => item.Value == guid);
 			var shaderAssets = _shaderCollection.ShaderReferenceList[shader.Key];

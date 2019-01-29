@@ -67,7 +67,7 @@ namespace Assets.Editor
 						continue;
 					}
 
-					using (var horizonal = new EditorGUILayout.HorizontalScope())
+					using (var horizontal = new EditorGUILayout.HorizontalScope())
 					{
 						asset.IsDelete = EditorGUILayout.Toggle(asset.IsDelete, GUILayout.Width(20));
 						var icon = AssetDatabase.GetCachedIcon(asset.Path);
@@ -84,7 +84,7 @@ namespace Assets.Editor
 
 		static void CleanDir()
 		{
-			RemoveEmptyDirectry("Assets");
+			RemoveEmptyDirectory("Assets");
 			AssetDatabase.Refresh();
 		}
 
@@ -124,7 +124,7 @@ namespace Assets.Editor
 				EditorUtility.DisplayProgressBar("clean directory", "", 1);
 				foreach (var dir in Directory.GetDirectories("Assets"))
 				{
-					RemoveEmptyDirectry(dir);
+					RemoveEmptyDirectory(dir);
 				}
 
 				System.Diagnostics.Process.Start(exportDirectry);
@@ -141,16 +141,13 @@ namespace Assets.Editor
 			}
 		}
 
-		static void RemoveEmptyDirectry(string path)
+		static void RemoveEmptyDirectory(string path)
 		{
-			var dirs = Directory.GetDirectories(path);
-			foreach (var dir in dirs)
-			{
-				RemoveEmptyDirectry(dir);
-			}
+			foreach (var dir in Directory.GetDirectories(path))
+				RemoveEmptyDirectory(dir);
 
 			var files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly).Where(item => Path.GetExtension(item) != ".meta");
-			if (files.Count() == 0 && Directory.GetDirectories(path).Count() == 0)
+			if (files.Count() == 0 && Directory.GetDirectories(path).Length == 0)
 			{
 				var metaFile = AssetDatabase.GetTextMetaFilePathFromAssetPath(path);
 				FileUtil.DeleteFileOrDirectory(path);
