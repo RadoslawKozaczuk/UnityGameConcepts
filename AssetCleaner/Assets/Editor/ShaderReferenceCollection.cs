@@ -55,15 +55,14 @@ namespace Assets.Editor
 			{
 				var shaderFilePath = AssetDatabase.GUIDToAssetPath(shader.Value);
 				var shaderName = shader.Key;
+				var referenceList = new List<string>();
 
-				List<string> referenceList = new List<string>();
 				ShaderReferenceList.Add(shaderName, referenceList);
-
 				var code = File.ReadAllText(shaderFilePath);
 
 				foreach (var checkingShaderName in ShaderFileList.Keys)
 				{
-					if (Regex.IsMatch(code, $"{checkingShaderName}"))
+					if (Regex.IsMatch(code, string.Format("{0}", checkingShaderName)))
 					{
 						var filePath = ShaderFileList[checkingShaderName];
 						referenceList.Add(filePath);

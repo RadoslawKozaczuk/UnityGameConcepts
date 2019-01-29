@@ -31,7 +31,6 @@ namespace Assets.Editor
 			var allFirstpassTypes = CollectionAllFastspassClasses();
 			CollectionCodeFileDictionary(allFirstpassTypes, firstPassList.ToArray());
 
-
 			var alltypes = CollectionAllClasses();
 			CollectionCodeFileDictionary(alltypes, codes.ToArray());
 			alltypes.AddRange(allFirstpassTypes);
@@ -64,7 +63,6 @@ namespace Assets.Editor
 
 				foreach (var type in alltypes)
 				{
-
 					if (CodeFileList.ContainsKey(type) == false)
 						CodeFileList.Add(type, new List<string>());
 
@@ -72,36 +70,35 @@ namespace Assets.Editor
 
 					if (string.IsNullOrEmpty(type.Namespace) == false)
 					{
-						var namespacepattern = $"namespace[\\s.]{type.Namespace}[{{\\s\\n]";
-						if (Regex.IsMatch(code, namespacepattern) == false)
-						{
+						var namespacepattern = string.Format("namespace[\\s.]{0}[{{\\s\\n]", type.Namespace);
+						if (!Regex.IsMatch(code, namespacepattern))
 							continue;
-						}
 					}
 
-					string typeName = type.IsGenericTypeDefinition ? type.GetGenericTypeDefinition().Name.Split('`')[0] : type.Name;
-					if (Regex.IsMatch(code, $"class\\s*{typeName}?[\\s:<{{]"))
+					string typeName = type.IsGenericTypeDefinition
+						? type.GetGenericTypeDefinition().Name.Split('`')[0]
+						: type.Name;
+
+					if (Regex.IsMatch(code, string.Format("class\\s*{0}?[\\s:<{{]", typeName)))
 					{
 						list.Add(AssetDatabase.AssetPathToGUID(codePath));
 						continue;
 					}
 
-					if (Regex.IsMatch(code, $"struct\\s*{typeName}[\\s:<{{]"))
+					if (Regex.IsMatch(code, string.Format("struct\\s*{0}[\\s:<{{]", typeName)))
 					{
 						list.Add(AssetDatabase.AssetPathToGUID(codePath));
 						continue;
 					}
 
-					if (Regex.IsMatch(code, $"enum\\s*{type.Name}[\\s{{]"))
+					if (Regex.IsMatch(code, string.Format("enum\\s*{0}[\\s{{]", type.Name)))
 					{
 						list.Add(AssetDatabase.AssetPathToGUID(codePath));
 						continue;
 					}
 
-					if (Regex.IsMatch(code, $"delegate\\s*{type.Name}\\s\\("))
-					{
+					if (Regex.IsMatch(code, string.Format("delegate\\s*{0}\\s\\(", type.Name)))
 						list.Add(AssetDatabase.AssetPathToGUID(codePath));
-					}
 				}
 			}
 		}
@@ -145,7 +142,7 @@ namespace Assets.Editor
 			{
 				if (!string.IsNullOrEmpty(type.Namespace))
 				{
-					var namespacepattern = $"[namespace|using][\\s\\.]{type.Namespace}[{{\\s\\r\\n\\r;]";
+					var namespacepattern = string.Format("[namespace|using][\\s\\.]{0}[{{\\s\\r\\n\\r;]", type.Namespace);
 					if (!Regex.IsMatch(code, namespacepattern))
 						continue;
 				}
@@ -154,8 +151,8 @@ namespace Assets.Editor
 					continue;
 
 				string match = type.IsGenericTypeDefinition
-					? $"[\\]\\[\\.\\s<(]{type.GetGenericTypeDefinition().Name.Split('`')[0]}[\\.\\s\\n\\r>,<(){{]"
-					: $"[\\]\\[\\.\\s<(]{type.Name.Replace("Attribute", "")}[\\.\\s\\n\\r>,<(){{\\]]";
+					? string.Format("[\\]\\[\\.\\s<(]{0}[\\.\\s\\n\\r>,<(){{]", type.GetGenericTypeDefinition().Name.Split('`')[0])
+					: string.Format("[\\]\\[\\.\\s<(]{0}[\\.\\s\\n\\r>,<(){{\\]]", type.Name.Replace("Attribute", ""));
 
 				if (!Regex.IsMatch(code, match))
 					continue;

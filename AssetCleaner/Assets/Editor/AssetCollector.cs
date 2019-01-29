@@ -36,12 +36,12 @@ namespace Assets.Editor
 					var extension = Path.GetExtension(path);
 
 					if (extension == ".meta"
-					    || extension == ".js"
-					    || extension == ".dll"
-					    || Regex.IsMatch(path, "[\\/\\\\]Gizmos[\\/\\\\]")
-					    || Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]Android[\\/\\\\]")
-					    || Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]iOS[\\/\\\\]")
-					    || Regex.IsMatch(path, "[\\/\\\\]Resources[\\/\\\\]"))
+						|| extension == ".js"
+						|| extension == ".dll"
+						|| Regex.IsMatch(path, "[\\/\\\\]Gizmos[\\/\\\\]")
+						|| Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]Android[\\/\\\\]")
+						|| Regex.IsMatch(path, "[\\/\\\\]Plugins[\\/\\\\]iOS[\\/\\\\]")
+						|| Regex.IsMatch(path, "[\\/\\\\]Resources[\\/\\\\]"))
 						continue;
 
 					if (UseCodeStrip == false)
@@ -129,7 +129,7 @@ namespace Assets.Editor
 				}
 
 				foreach (var undeleteClass in undeleteClassList)
-					if (Regex.IsMatch(code, $"\\[CustomEditor.*\\(\\s*{undeleteClass.Name}\\s*\\).*\\]"))
+					if (Regex.IsMatch(code, string.Format("\\[CustomEditor.*\\(\\s*{0}\\s*\\).*\\]", undeleteClass.Name)))
 						UnregistFromDelteList(path);
 			}
 		}
