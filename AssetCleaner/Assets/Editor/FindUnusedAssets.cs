@@ -8,9 +8,14 @@ namespace Assets.Editor
 {
 	public class FindUnusedAssets : EditorWindow
 	{
+		const string ComponentsDir = "Assets/Components";
+		const string ResourcesDir = "Assets/Resources";
+
 		AssetCollector _collection = new AssetCollector();
 		List<DeleteAsset> _deleteAssets = new List<DeleteAsset>();
 		Vector2 _scroll;
+		bool _selectAllValue;
+		bool _selectAllHasChanged;
 
 		[MenuItem("Assets/Delete Unused Assets/only resource", false, 50)]
 		static void InitWithoutCode()
@@ -44,12 +49,24 @@ namespace Assets.Editor
 			window.Show();
 		}
 
+		// similar to any Update function.
+		// Except it is not called once per frame but it is called one or more times per interaction.
+		// So whenever we click or move the mouse or press a button etc.
 		void OnGui()
 		{
-			using (var horizonal = new EditorGUILayout.HorizontalScope("box"))
+			/*
+				In Editor scripting, you will see functions which begin with 'Begin' or 'End'.
+				You may treat these similarly to curly braces (except no compiler error will be thrown
+				if you forget the 'End' function).
+			*/
+
+			// this is layout
+			// this is equvalent to begin and end functions
+			using (var horizontal = new EditorGUILayout.HorizontalScope("box"))
 			{
 				EditorGUILayout.LabelField("delete unreference assets from buildsettings and resources");
 
+				// if we do click the button in the update cycle it will return true
 				if (GUILayout.Button("Delete", GUILayout.Width(120), GUILayout.Height(40)) && _deleteAssets.Count != 0)
 				{
 					RemoveFiles();
@@ -60,12 +77,16 @@ namespace Assets.Editor
 			using (var scrollScope = new EditorGUILayout.ScrollViewScope(_scroll))
 			{
 				_scroll = scrollScope.scrollPosition;
+
+				var everyFrameValue = EditorGUILayout.Toggle("select all", _selectAllValue);
+				if (everyFrameValue != _selectAllValue)
+					_selectAllHasChanged = true;
+				_selectAllValue = everyFrameValue;
+
 				foreach (var asset in _deleteAssets)
 				{
 					if (string.IsNullOrEmpty(asset.Path))
-					{
 						continue;
-					}
 
 					using (var horizontal = new EditorGUILayout.HorizontalScope())
 					{
@@ -73,9 +94,7 @@ namespace Assets.Editor
 						var icon = AssetDatabase.GetCachedIcon(asset.Path);
 						GUILayout.Label(icon, GUILayout.Width(20), GUILayout.Height(20));
 						if (GUILayout.Button(asset.Path, EditorStyles.largeLabel))
-						{
 							Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(asset.Path);
-						}
 					}
 				}
 			}
@@ -93,9 +112,7 @@ namespace Assets.Editor
 			{
 				var filePath = AssetDatabase.GUIDToAssetPath(asset);
 				if (string.IsNullOrEmpty(filePath) == false)
-				{
-					_deleteAssets.Add(new DeleteAsset() { Path = filePath });
-				}
+					_deleteAssets.Add(new DeleteAsset { Path = filePath });
 			}
 		}
 
