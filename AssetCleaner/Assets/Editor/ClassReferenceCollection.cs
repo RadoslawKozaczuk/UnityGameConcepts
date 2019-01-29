@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,46 +12,64 @@ namespace Assets.Editor
 	public class ClassReferenceCollection
 	{
 		// type : guid
-		public Dictionary<System.Type, List<string>> CodeFileList = new Dictionary<System.Type, List<string>>();
+		public Dictionary<Type, List<string>> CodeFileList = new Dictionary<Type, List<string>>();
 		// guid : types
-		public Dictionary<string, List<System.Type>> References = new Dictionary<string, List<System.Type>>();
+		public Dictionary<string, List<Type>> References = new Dictionary<string, List<Type>>();
 
 		public void Collection()
 		{
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
+
 			References.Clear();
 			EditorUtility.DisplayProgressBar("checking", "collection all type", 0);
 
 			// Connect the files and class.
 			var codes = Directory.GetFiles("Assets", "*.cs", SearchOption.AllDirectories);
 			// connect each classes.
-			var firstPassList = new List<string>();
-			if (Directory.Exists("Assets/Plugins"))
-				firstPassList.AddRange(Directory.GetFiles("Assets/Plugins", "*.cs", SearchOption.AllDirectories));
-			if (Directory.Exists("Assets/Standard Assets"))
-				firstPassList.AddRange(Directory.GetFiles("Assets/Standard Assets", "*.cs", SearchOption.AllDirectories));
+			var firstPassList = GetFirstPassList();
 
-			var allFirstpassTypes = CollectionAllFastspassClasses();
-			CollectionCodeFileDictionary(allFirstpassTypes, firstPassList.ToArray());
+			var allFirstpassTypes = GetAllFirstpassClasses();
+			CollectionCodeFileDictionary(allFirstpassTypes, firstPassList);
+			sw.Stop();
 
-			var alltypes = CollectionAllClasses();
-			CollectionCodeFileDictionary(alltypes, codes.ToArray());
+			var alltypes = GetAllClasses();
+			CollectionCodeFileDictionary(alltypes, codes);
 			alltypes.AddRange(allFirstpassTypes);
 
 			int count = 0;
 			foreach (var codepath in firstPassList)
 			{
 				CollectionReferenceClasses(AssetDatabase.AssetPathToGUID(codepath), allFirstpassTypes);
-				EditorUtility.DisplayProgressBar("checking", "analytics codes", ((float)++count / codes.Length) * 0.5f + 0.5f);
+				EditorUtility.DisplayProgressBar("checking", "analytics codes", (float)++count / codes.Length * 0.5f + 0.5f);
 			}
+
 			count = 0;
 			foreach (var codepath in codes)
 			{
 				CollectionReferenceClasses(AssetDatabase.AssetPathToGUID(codepath), alltypes);
-				EditorUtility.DisplayProgressBar("checking", "analytics codes", ((float)++count / codes.Length) * 0.5f);
+				EditorUtility.DisplayProgressBar("checking", "analytics codes", (float)++count / codes.Length * 0.5f);
 			}
 		}
 
-		void CollectionCodeFileDictionary(List<System.Type> alltypes, string[] codes)
+		string[] GetFirstPassList()
+		{
+			string[] plugins = new string[0];
+			string[] stdAssets = new string[0];
+
+			if (Directory.Exists("Assets/Plugins"))
+				plugins = Directory.GetFiles("Assets/Plugins", "*.cs", SearchOption.AllDirectories);
+			if (Directory.Exists("Assets/Standard Assets"))
+				stdAssets = Directory.GetFiles("Assets/Standard Assets", "*.cs", SearchOption.AllDirectories);
+
+			string[] newArray = new string[plugins.Length + stdAssets.Length];
+			Array.Copy(plugins, newArray, plugins.Length);
+			Array.Copy(stdAssets, 0, newArray, plugins.Length, stdAssets.Length);
+
+			return newArray;
+		}
+
+		void CollectionCodeFileDictionary(List<Type> alltypes, string[] codes)
 		{
 			float count = 1;
 			foreach (var codePath in codes)
@@ -103,9 +123,9 @@ namespace Assets.Editor
 			}
 		}
 
-		List<System.Type> CollectionAllClasses()
+		List<Type> GetAllClasses()
 		{
-			List<System.Type> alltypes = new List<System.Type>();
+			List<Type> alltypes = new List<Type>();
 
 			if (File.Exists("Library/ScriptAssemblies/Assembly-CSharp.dll"))
 				alltypes.AddRange(Assembly.LoadFile("Library/ScriptAssemblies/Assembly-CSharp.dll").GetTypes());
@@ -115,9 +135,9 @@ namespace Assets.Editor
 			return alltypes.ToList();
 		}
 
-		List<System.Type> CollectionAllFastspassClasses()
+		List<Type> GetAllFirstpassClasses()
 		{
-			List<System.Type> alltypes = new List<System.Type>();
+			List<Type> alltypes = new List<Type>();
 			if (File.Exists("Library/ScriptAssemblies/Assembly-CSharp-firstpass.dll"))
 				alltypes.AddRange(Assembly.LoadFile("Library/ScriptAssemblies/Assembly-CSharp-firstpass.dll").GetTypes());
 			if (File.Exists("Library/ScriptAssemblies/Assembly-CSharp-Editor-firstpass.dll"))
@@ -125,7 +145,7 @@ namespace Assets.Editor
 			return alltypes;
 		}
 
-		void CollectionReferenceClasses(string guid, List<System.Type> types)
+		void CollectionReferenceClasses(string guid, List<Type> types)
 		{
 			var codePath = AssetDatabase.GUIDToAssetPath(guid);
 			if (string.IsNullOrEmpty(codePath) || References.ContainsKey(guid) || !File.Exists(codePath))
@@ -135,7 +155,7 @@ namespace Assets.Editor
 			code = Regex.Replace(code, "//.*[\\n\\r]", "");
 			code = Regex.Replace(code, "/\\*.*[\\n\\r]\\*/", "");
 
-			var list = new List<System.Type>();
+			var list = new List<Type>();
 			References[guid] = list;
 
 			foreach (var type in types)

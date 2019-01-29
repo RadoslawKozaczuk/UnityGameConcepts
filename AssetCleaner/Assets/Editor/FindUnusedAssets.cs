@@ -11,18 +11,32 @@ namespace Assets.Editor
 		const string ComponentsDir = "Assets/Components";
 		const string ResourcesDir = "Assets/Resources";
 
+		enum SearchDirectories
+		{
+			Components, Resources
+		}
+
 		AssetCollector _collection = new AssetCollector();
 		List<DeleteAsset> _deleteAssets = new List<DeleteAsset>();
 		Vector2 _scroll;
 		bool _selectAllValue;
 		bool _selectAllHasChanged;
 
+		bool _useCodeStrips;
+		bool _saveEditorExtensions;
+
+		//[MenuItem("Assets/Delete Unused Assets", false, 50)]
+		//static void TheOnlyWay()
+		//{
+		//	var window = CreateInstance<FindUnusedAssets>();
+		//	window.Show();
+		//}
+
 		[MenuItem("Assets/Delete Unused Assets/only resource", false, 50)]
 		static void InitWithoutCode()
 		{
 			var window = CreateInstance<FindUnusedAssets>();
-			window._collection.UseCodeStrip = false;
-			window._collection.Collection();
+			window._collection.Collection(ComponentsDir,false, true);
 			window.CopyDeleteFileList(window._collection.DeleteFileList);
 
 			window.Show();
@@ -32,7 +46,7 @@ namespace Assets.Editor
 		static void InitWithout()
 		{
 			var window = CreateInstance<FindUnusedAssets>();
-			window._collection.Collection();
+			window._collection.Collection(ComponentsDir,true, true);
 			window.CopyDeleteFileList(window._collection.DeleteFileList);
 
 			window.Show();
@@ -42,8 +56,7 @@ namespace Assets.Editor
 		static void Init()
 		{
 			var window = CreateInstance<FindUnusedAssets>();
-			window._collection.SaveEditorExtensions = false;
-			window._collection.Collection();
+			window._collection.Collection(ComponentsDir,true, false);
 			window.CopyDeleteFileList(window._collection.DeleteFileList);
 
 			window.Show();
@@ -54,6 +67,18 @@ namespace Assets.Editor
 		// So whenever we click or move the mouse or press a button etc.
 		void OnGui()
 		{
+			//using (var horizontal = new EditorGUILayout.HorizontalScope("box"))
+			//{
+
+			//}
+
+			EditorGUILayout.BeginHorizontal();
+			_saveEditorExtensions = EditorGUILayout.Toggle("Exclude objects that reference from scenes", _selectAllValue);
+			_useCodeStrips = EditorGUILayout.Toggle("Exclude objects that reference from scenes", _selectAllValue);
+
+			SearchDirectories trwr = SearchDirectories.Components;
+			EditorGUILayout.EnumPopup(trwr);
+			EditorGUILayout.EndHorizontal();
 			/*
 				In Editor scripting, you will see functions which begin with 'Begin' or 'End'.
 				You may treat these similarly to curly braces (except no compiler error will be thrown
@@ -61,7 +86,7 @@ namespace Assets.Editor
 			*/
 
 			// this is layout
-			// this is equvalent to begin and end functions
+			// this is equivalent to begin and end functions
 			using (var horizontal = new EditorGUILayout.HorizontalScope("box"))
 			{
 				EditorGUILayout.LabelField("delete unreference assets from buildsettings and resources");

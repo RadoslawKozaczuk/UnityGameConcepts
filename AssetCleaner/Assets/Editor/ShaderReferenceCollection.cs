@@ -24,13 +24,12 @@ namespace Assets.Editor
 			{
 				var code = File.ReadAllText(shaderFilePath);
 				var match = Regex.Match(code, "Shader \"(?<name>.*)\"");
+
 				if (match.Success)
 				{
 					var shaderName = match.Groups["name"].ToString();
 					if (ShaderFileList.ContainsKey(shaderName) == false)
-					{
 						ShaderFileList.Add(shaderName, AssetDatabase.AssetPathToGUID(shaderFilePath));
-					}
 				}
 			}
 

@@ -12,22 +12,19 @@ namespace Assets.Editor
 		readonly ClassReferenceCollection _classCollection = new ClassReferenceCollection();
 		readonly ShaderReferenceCollection _shaderCollection = new ShaderReferenceCollection();
 
-		public bool UseCodeStrip = true;
-		public bool SaveEditorExtensions = true;
-
-		public void Collection()
+		public void Collection(string directory, bool useCodeStrip = true, bool saveEditorExtensions = true)
 		{
 			try
 			{
 				DeleteFileList.Clear();
 
-				if (UseCodeStrip)
+				if (useCodeStrip)
 					_classCollection.Collection();
 
 				_shaderCollection.Collection();
 
 				// Find assets
-				var files = Directory.GetFiles("Assets", "*.*", SearchOption.AllDirectories);
+				var files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
 				// filter files
 				for (int i = 0; i < files.Length; i++)
@@ -44,7 +41,7 @@ namespace Assets.Editor
 						|| Regex.IsMatch(path, "[\\/\\\\]Resources[\\/\\\\]"))
 						continue;
 
-					if (UseCodeStrip == false)
+					if (useCodeStrip == false)
 					{
 						if (extension != ".cs")
 							DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
@@ -68,7 +65,7 @@ namespace Assets.Editor
 				UnregistReferenceFromScenes();
 
 				EditorUtility.DisplayProgressBar("checking", "check reference from scenes", 0.6f);
-				if (SaveEditorExtensions)
+				if (saveEditorExtensions)
 					UnregistEditorCodes();
 			}
 			finally
@@ -76,6 +73,7 @@ namespace Assets.Editor
 				EditorUtility.ClearProgressBar();
 			}
 		}
+
 		void UnregistReferenceFromResources()
 		{
 			var allFiles = Directory.GetFiles("Assets/Components/Menu/Sprites", "*.*", SearchOption.AllDirectories);
