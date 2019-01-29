@@ -11,6 +11,8 @@ namespace Assets.Editor
 {
 	public class ClassReferenceCollection
 	{
+		const string ProgressBarTitle = "Searching for unused assets";
+
 		// type : guid
 		public Dictionary<Type, List<string>> CodeFileList = new Dictionary<Type, List<string>>();
 		// guid : types
@@ -18,37 +20,30 @@ namespace Assets.Editor
 
 		public void Collection()
 		{
-			Stopwatch sw = new Stopwatch();
-			sw.Start();
-
 			References.Clear();
-			EditorUtility.DisplayProgressBar("checking", "collection all type", 0);
+			EditorUtility.DisplayProgressBar(ProgressBarTitle, "collection all type", 0);
 
-			// Connect the files and class.
-			var codes = Directory.GetFiles("Assets", "*.cs", SearchOption.AllDirectories);
-			// connect each classes.
 			var firstPassList = GetFirstPassList();
-
 			var allFirstpassTypes = GetAllFirstpassClasses();
 			CollectionCodeFileDictionary(allFirstpassTypes, firstPassList);
-			sw.Stop();
 
-			var alltypes = GetAllClasses();
+			var codes = Directory.GetFiles("Assets", "*.cs", SearchOption.AllDirectories);
+			var alltypes = GetAllClassTypes();
 			CollectionCodeFileDictionary(alltypes, codes);
 			alltypes.AddRange(allFirstpassTypes);
 
-			int count = 0;
+			float count = 0;
 			foreach (var codepath in firstPassList)
 			{
 				CollectionReferenceClasses(AssetDatabase.AssetPathToGUID(codepath), allFirstpassTypes);
-				EditorUtility.DisplayProgressBar("checking", "analytics codes", (float)++count / codes.Length * 0.5f + 0.5f);
+				EditorUtility.DisplayProgressBar(ProgressBarTitle, "analytics codes 1", ++count / codes.Length);
 			}
 
 			count = 0;
 			foreach (var codepath in codes)
 			{
 				CollectionReferenceClasses(AssetDatabase.AssetPathToGUID(codepath), alltypes);
-				EditorUtility.DisplayProgressBar("checking", "analytics codes", (float)++count / codes.Length * 0.5f);
+				EditorUtility.DisplayProgressBar(ProgressBarTitle, "analytics codes 2", ++count / codes.Length);
 			}
 		}
 
@@ -71,22 +66,17 @@ namespace Assets.Editor
 
 		void CollectionCodeFileDictionary(List<Type> alltypes, string[] codes)
 		{
-			float count = 1;
+			float count = 0;
 			foreach (var codePath in codes)
 			{
-				EditorUtility.DisplayProgressBar("checking", "search files", count++ / codes.Length);
+				EditorUtility.DisplayProgressBar(ProgressBarTitle, "search files", ++count / codes.Length);
 
-				// connect file and classes.
-				var code = File.ReadAllText(codePath);
-				code = Regex.Replace(code, "//.*[\\n\\r]", "");
-				code = Regex.Replace(code, "/\\*.*[\\n\\r]\\*/", "");
+				var code = Regex.Replace(File.ReadAllText(codePath), @"\s", "");
 
 				foreach (var type in alltypes)
 				{
 					if (CodeFileList.ContainsKey(type) == false)
 						CodeFileList.Add(type, new List<string>());
-
-					var list = CodeFileList[type];
 
 					if (string.IsNullOrEmpty(type.Namespace) == false)
 					{
@@ -95,43 +85,30 @@ namespace Assets.Editor
 							continue;
 					}
 
-					string typeName = type.IsGenericTypeDefinition
-						? type.GetGenericTypeDefinition().Name.Split('`')[0]
-						: type.Name;
+					var list = CodeFileList[type];
 
-					if (Regex.IsMatch(code, string.Format("class\\s*{0}?[\\s:<{{]", typeName)))
+					if (Regex.IsMatch(code, string.Format("enum{0}|delegate{0}", type.Name)))
+						list.Add(AssetDatabase.AssetPathToGUID(codePath));
+					else
 					{
-						list.Add(AssetDatabase.AssetPathToGUID(codePath));
-						continue;
-					}
+						string typeName = type.IsGenericTypeDefinition
+							? type.GetGenericTypeDefinition().Name.Split('`')[0]
+							: type.Name;
 
-					if (Regex.IsMatch(code, string.Format("struct\\s*{0}[\\s:<{{]", typeName)))
-					{
-						list.Add(AssetDatabase.AssetPathToGUID(codePath));
-						continue;
+						if (Regex.IsMatch(code, string.Format("class{0}|struct{0}", typeName)))
+							list.Add(AssetDatabase.AssetPathToGUID(codePath));
 					}
-
-					if (Regex.IsMatch(code, string.Format("enum\\s*{0}[\\s{{]", type.Name)))
-					{
-						list.Add(AssetDatabase.AssetPathToGUID(codePath));
-						continue;
-					}
-
-					if (Regex.IsMatch(code, string.Format("delegate\\s*{0}\\s\\(", type.Name)))
-						list.Add(AssetDatabase.AssetPathToGUID(codePath));
 				}
 			}
 		}
 
-		List<Type> GetAllClasses()
+		List<Type> GetAllClassTypes()
 		{
 			List<Type> alltypes = new List<Type>();
-
 			if (File.Exists("Library/ScriptAssemblies/Assembly-CSharp.dll"))
 				alltypes.AddRange(Assembly.LoadFile("Library/ScriptAssemblies/Assembly-CSharp.dll").GetTypes());
 			if (File.Exists("Library/ScriptAssemblies/Assembly-CSharp-Editor.dll"))
 				alltypes.AddRange(Assembly.LoadFile("Library/ScriptAssemblies/Assembly-CSharp-Editor.dll").GetTypes());
-
 			return alltypes.ToList();
 		}
 
@@ -151,9 +128,7 @@ namespace Assets.Editor
 			if (string.IsNullOrEmpty(codePath) || References.ContainsKey(guid) || !File.Exists(codePath))
 				return;
 
-			var code = File.ReadAllText(codePath);
-			code = Regex.Replace(code, "//.*[\\n\\r]", "");
-			code = Regex.Replace(code, "/\\*.*[\\n\\r]\\*/", "");
+			var code = Regex.Replace(File.ReadAllText(codePath), @"\s", "");
 
 			var list = new List<Type>();
 			References[guid] = list;
@@ -162,7 +137,7 @@ namespace Assets.Editor
 			{
 				if (!string.IsNullOrEmpty(type.Namespace))
 				{
-					var namespacepattern = string.Format("[namespace|using][\\s\\.]{0}[{{\\s\\r\\n\\r;]", type.Namespace);
+					var namespacepattern = string.Format("[namespace|using][\\.]{0}]", type.Namespace);
 					if (!Regex.IsMatch(code, namespacepattern))
 						continue;
 				}
@@ -171,15 +146,15 @@ namespace Assets.Editor
 					continue;
 
 				string match = type.IsGenericTypeDefinition
-					? string.Format("[\\]\\[\\.\\s<(]{0}[\\.\\s\\n\\r>,<(){{]", type.GetGenericTypeDefinition().Name.Split('`')[0])
-					: string.Format("[\\]\\[\\.\\s<(]{0}[\\.\\s\\n\\r>,<(){{\\]]", type.Name.Replace("Attribute", ""));
+					? string.Format("{0}", type.GetGenericTypeDefinition().Name.Split('`')[0])
+					: string.Format("{0}", type.Name.Replace("Attribute", ""));
 
 				if (!Regex.IsMatch(code, match))
 					continue;
 
 				list.Add(type);
-				var typeGuid = CodeFileList[type];
-				foreach (var referenceGuid in typeGuid)
+
+				foreach (var referenceGuid in CodeFileList[type])
 					CollectionReferenceClasses(referenceGuid, types);
 			}
 		}

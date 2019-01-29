@@ -12,15 +12,13 @@ namespace Assets.Editor
 		readonly ClassReferenceCollection _classCollection = new ClassReferenceCollection();
 		readonly ShaderReferenceCollection _shaderCollection = new ShaderReferenceCollection();
 
-		public void Collection(string directory, bool useCodeStrip = true, bool saveEditorExtensions = true)
+		public void Collection(string directory, bool saveEditorExtensions)
 		{
 			try
 			{
 				DeleteFileList.Clear();
 
-				if (useCodeStrip)
-					_classCollection.Collection();
-
+				_classCollection.Collection();
 				_shaderCollection.Collection();
 
 				// Find assets
@@ -41,21 +39,7 @@ namespace Assets.Editor
 						|| Regex.IsMatch(path, "[\\/\\\\]Resources[\\/\\\\]"))
 						continue;
 
-					if (useCodeStrip == false)
-					{
-						if (extension != ".cs")
-							DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
-					}
-					else
-					{
-						DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
-					}
-				}
-
-				foreach (var path in files)
-				{
-					var guid = AssetDatabase.AssetPathToGUID(path);
-					DeleteFileList.Add(guid);
+					DeleteFileList.Add(AssetDatabase.AssetPathToGUID(path));
 				}
 
 				EditorUtility.DisplayProgressBar("checking", "collection all files", 0.2f);

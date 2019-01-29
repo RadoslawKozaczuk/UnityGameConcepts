@@ -22,7 +22,6 @@ namespace Assets.Editor
 		bool _selectAllValue;
 		bool _selectAllHasChanged;
 
-		bool _useCodeStrips;
 		bool _saveEditorExtensions;
 
 		//[MenuItem("Assets/Delete Unused Assets", false, 50)]
@@ -32,21 +31,12 @@ namespace Assets.Editor
 		//	window.Show();
 		//}
 
-		[MenuItem("Assets/Delete Unused Assets/only resource", false, 50)]
-		static void InitWithoutCode()
-		{
-			var window = CreateInstance<FindUnusedAssets>();
-			window._collection.Collection(ComponentsDir,false, true);
-			window.CopyDeleteFileList(window._collection.DeleteFileList);
-
-			window.Show();
-		}
 
 		[MenuItem("Assets/Delete Unused Assets/unused by editor", false, 51)]
 		static void InitWithout()
 		{
 			var window = CreateInstance<FindUnusedAssets>();
-			window._collection.Collection(ComponentsDir,true, true);
+			window._collection.Collection(ComponentsDir, true);
 			window.CopyDeleteFileList(window._collection.DeleteFileList);
 
 			window.Show();
@@ -56,7 +46,7 @@ namespace Assets.Editor
 		static void Init()
 		{
 			var window = CreateInstance<FindUnusedAssets>();
-			window._collection.Collection(ComponentsDir,true, false);
+			window._collection.Collection(ComponentsDir, false);
 			window.CopyDeleteFileList(window._collection.DeleteFileList);
 
 			window.Show();
@@ -74,7 +64,6 @@ namespace Assets.Editor
 
 			EditorGUILayout.BeginHorizontal();
 			_saveEditorExtensions = EditorGUILayout.Toggle("Exclude objects that reference from scenes", _selectAllValue);
-			_useCodeStrips = EditorGUILayout.Toggle("Exclude objects that reference from scenes", _selectAllValue);
 
 			SearchDirectories trwr = SearchDirectories.Components;
 			EditorGUILayout.EnumPopup(trwr);
