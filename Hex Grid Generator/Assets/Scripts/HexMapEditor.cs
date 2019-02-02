@@ -12,10 +12,10 @@ public class HexMapEditor : MonoBehaviour
     // TODO these default values should be read from the interface not hardcoded
     int _activeTerrainTypeIndex = 2, _activeElevation = 1, _brushSize, _activeWaterLevel;
     bool _applyElevation = true, _applyWaterLevel = true, _isDrag;
-    
+
     void Update()
     {
-        // The EventSystem knows only about the UI objects 
+        // The EventSystem knows only about the UI objects
         // so we can ask him if the cursor is above something at the moment of click
         // and if not it means we can normally process input.
         // This is done so to avoid undesirable double interacting with the UI and the grid at the same time.
@@ -26,25 +26,6 @@ public class HexMapEditor : MonoBehaviour
     }
 
     public void SetRiverMode(int mode) => _riverMode = (EditModes)mode;
-
-    public void Save()
-    {
-        string path = Path.Combine(Application.persistentDataPath, "test.map");
-        using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create)))
-        {
-            _hexGrid.Save(writer);
-        }
-    }
-
-    public void Load()
-    {
-        string path = Path.Combine(Application.persistentDataPath, "test.map");
-        using (BinaryReader reader = new BinaryReader(File.OpenRead(path)))
-        {
-            _hexGrid.Load(reader);
-            HexMapCamera.ValidatePosition();
-        }
-    }
 
     void HandleInput()
     {
