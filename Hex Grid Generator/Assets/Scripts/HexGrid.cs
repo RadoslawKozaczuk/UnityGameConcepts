@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
+using System.Collections;
+using System.Collections.Generic;
 
 public class HexGrid : MonoBehaviour
 {
@@ -20,7 +22,11 @@ public class HexGrid : MonoBehaviour
         HexMetrics.NoiseSource = NoiseSource;
         FeatureManager.InitializeHashGrid(Seed);
         CreateMap(CellCountX, CellCountZ);
-    }
+
+		var pos = CellLabelPrefab.transform.position;
+		var newPos = new Vector3(pos.x, pos.y + 1, pos.z);
+		CellLabelPrefab.transform.position = newPos;
+	}
 
 	void OnEnable()
 	{
@@ -64,13 +70,42 @@ public class HexGrid : MonoBehaviour
         return _cells[x + z * CellCountX];
     }
 
-    public void ShowUI(bool visible)
-    {
-        for (int i = 0; i < _chunks.Length; i++)
-            _chunks[i].ShowUI(visible);
-    }
+	public void FindDistancesTo(HexCell cell)
+	{
+		StopCoroutine(Search(cell));
+		StartCoroutine(Search(cell));
+	}
 
-    public void Save(BinaryWriter writer)
+	IEnumerator Search(HexCell cell)
+	{
+		for (int i = 0; i < _cells.Length; i++)
+			_cells[i].Distance = int.MaxValue;
+
+		var delay = new WaitForSeconds(1 / 60f);
+		var queue = new Queue<HexCell>();
+		cell.Distance = 0;
+		queue.Enqueue(cell);
+
+		while (queue.Count > 0)
+		{
+			yield return delay;
+			HexCell current = queue.Dequeue();
+			for (HexDirection dir = HexDirection.NorthEast; dir <= HexDirection.NorthWest; dir++)
+			{
+				HexCell neighbor = current.GetNeighbor(dir);
+				if (neighbor == null
+					|| neighbor.Distance != int.MaxValue
+					|| neighbor.IsUnderwater
+					|| current.GetEdgeType(neighbor) == HexEdgeType.Cliff)
+					continue;
+
+				neighbor.Distance = current.Distance + 1;
+				queue.Enqueue(neighbor);
+			}
+		}
+	}
+
+	public void Save(BinaryWriter writer)
     {
         writer.Write(CellCountX);
         writer.Write(CellCountZ);
@@ -81,7 +116,9 @@ public class HexGrid : MonoBehaviour
 
     public void Load(BinaryReader reader)
     {
-        CreateMap(reader.ReadInt32(), reader.ReadInt32());
+		StopAllCoroutines();
+
+		CreateMap(reader.ReadInt32(), reader.ReadInt32());
 
         for (int i = 0; i < _cells.Length; i++)
             _cells[i].Load(reader);
@@ -166,7 +203,6 @@ public class HexGrid : MonoBehaviour
 
         Text label = Instantiate(CellLabelPrefab);
         label.rectTransform.anchoredPosition = new Vector2(position.x, position.z);
-        label.text = cell.Coordinates.ToStringOnSeparateLines();
 
         cell.UiRect = label.rectTransform;
         cell.Elevation = 0;

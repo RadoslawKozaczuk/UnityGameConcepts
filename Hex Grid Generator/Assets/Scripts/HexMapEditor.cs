@@ -12,12 +12,9 @@ public class HexMapEditor : MonoBehaviour
 
     // TODO these default values should be read from the interface not hardcoded
     int _activeTerrainTypeIndex = 2, _activeElevation = 1, _brushSize, _activeWaterLevel;
-    bool _applyElevation = true, _applyWaterLevel = true, _isDrag;
+	bool _applyElevation = true, _applyWaterLevel = true, _isDrag, _editMode = true;
 
-	void Awake()
-	{
-		_terrainMaterial.DisableKeyword("GRID_ON");
-	}
+	void Awake() => _terrainMaterial.DisableKeyword("GRID_ON");
 
 	void Update()
     {
@@ -36,15 +33,20 @@ public class HexMapEditor : MonoBehaviour
     void HandleInput()
     {
         Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(inputRay, out RaycastHit hit))
-        {
-            HexCell currentCell = _hexGrid.GetCell(hit.point);
-            if (_previousCell && _previousCell != currentCell)
-                ValidateDrag(currentCell);
-            else
-                _isDrag = false;
-            EditCells(currentCell);
-            _previousCell = currentCell;
+		if (Physics.Raycast(inputRay, out RaycastHit hit))
+		{
+			HexCell currentCell = _hexGrid.GetCell(hit.point);
+			if (_previousCell && _previousCell != currentCell)
+				ValidateDrag(currentCell);
+			else
+				_isDrag = false;
+
+			if (_editMode)
+				EditCells(currentCell);
+			else
+				_hexGrid.FindDistancesTo(currentCell);
+
+			_previousCell = currentCell;
         }
         else
             _previousCell = null;
@@ -119,8 +121,6 @@ public class HexMapEditor : MonoBehaviour
 
     public void SetBrushSize(float size) => _brushSize = (int)size;
 
-    public void ShowUI(bool visible) => _hexGrid.ShowUI(visible);
-
     public void ToggleTerrainPerturbation() => HexMetrics.ElevationPerturbFlag = !HexMetrics.ElevationPerturbFlag;
 
     public void RecreateMap() { }
@@ -137,5 +137,10 @@ public class HexMapEditor : MonoBehaviour
 			_terrainMaterial.EnableKeyword("GRID_ON");
 		else
 			_terrainMaterial.DisableKeyword("GRID_ON");
+	}
+
+	public void SetEditMode(bool toggle)
+	{
+		_editMode = toggle;
 	}
 }

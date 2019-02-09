@@ -4,9 +4,9 @@ using UnityEngine;
 [Serializable]
 public struct HexCoordinates
 {
-    // If you add all three coordinates together you will always get zero. 
-    // If you increment one coordinate, you have to decrement another. 
-    // Indeed, this produces six possible directions of movement. 
+    // If you add all three coordinates together you will always get zero.
+    // If you increment one coordinate, you have to decrement another.
+    // Indeed, this produces six possible directions of movement.
     // These coordinates are typically known as cube coordinates, as they are three-dimensional and the topology resembles a cube.
     public int X
     {
@@ -24,7 +24,7 @@ public struct HexCoordinates
         }
     }
 
-    // As we already store the X and Z coordinates, we don't need to store the Y coordinate. 
+    // As we already store the X and Z coordinates, we don't need to store the Y coordinate.
     // We can include a property that computes it on demand.
     public int Y
     {
@@ -43,10 +43,15 @@ public struct HexCoordinates
         _z = z;
     }
 
-    // Let's fix out those X coordinates so they are aligned along a straight axis. 
-    // We can do this by undoing the horizontal shift.
-    // The result is typically know as axial coordinates.
-    public static HexCoordinates FromOffsetCoordinates(int x, int z) => new HexCoordinates(x - z / 2, z);
+	public int DistanceTo(HexCoordinates other)
+		=> ((_x < other.X ? other.X - _x : _x - other.X)
+			+ (Y < other.Y ? other.Y - Y : Y - other.Y)
+			+ (_z < other.Z ? other.Z - _z : _z - other.Z)) / 2;
+
+	// Let's fix out those X coordinates so they are aligned along a straight axis.
+	// We can do this by undoing the horizontal shift.
+	// The result is typically know as axial coordinates.
+	public static HexCoordinates FromOffsetCoordinates(int x, int z) => new HexCoordinates(x - z / 2, z);
 
     public override string ToString() => "(" + X.ToString() + ", " + Y.ToString() + ", " + Z.ToString() + ")";
 
@@ -70,7 +75,7 @@ public struct HexCoordinates
         // rounding error may sometimes occur
         if (iX + iY + iZ != 0)
         {
-            // The solution then becomes to discard the coordinate with the largest rounding delta, and reconstruct it from the other two. 
+            // The solution then becomes to discard the coordinate with the largest rounding delta, and reconstruct it from the other two.
             // But as we only need X and Z, we don't need to bother with reconstructing Y.
             float dX = Mathf.Abs(x - iX);
             float dY = Mathf.Abs(y - iY);

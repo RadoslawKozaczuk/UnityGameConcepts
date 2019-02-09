@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.IO;
+using UnityEngine.UI;
 
 public class HexCell : MonoBehaviour
 {
@@ -90,8 +91,28 @@ public class HexCell : MonoBehaviour
 
     int _terrainTypeIndex = 2;
     int _elevation;
+	int _distance;
 
-    public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
+	public int Distance
+	{
+		get
+		{
+			return _distance;
+		}
+		set
+		{
+			_distance = value;
+			UpdateDistanceLabel();
+		}
+	}
+
+	void UpdateDistanceLabel()
+	{
+		Text label = UiRect.GetComponent<Text>();
+		label.text = _distance == int.MaxValue ? "" : _distance.ToString();
+	}
+
+	public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
 
     /// <summary>
     /// Returns neighbor of the particular cell.
