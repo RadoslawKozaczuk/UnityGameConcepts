@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
-using System.IO;
 
 public class HexMapEditor : MonoBehaviour
 {
-    [SerializeField] HexGrid _hexGrid;
+	[SerializeField] Material _terrainMaterial;
+	[SerializeField] HexGrid _hexGrid;
+
     HexCell _previousCell;
     HexDirection _dragDirection;
     EditModes _riverMode, _roadMode;
@@ -13,7 +14,12 @@ public class HexMapEditor : MonoBehaviour
     int _activeTerrainTypeIndex = 2, _activeElevation = 1, _brushSize, _activeWaterLevel;
     bool _applyElevation = true, _applyWaterLevel = true, _isDrag;
 
-    void Update()
+	void Awake()
+	{
+		_terrainMaterial.DisableKeyword("GRID_ON");
+	}
+
+	void Update()
     {
         // The EventSystem knows only about the UI objects
         // so we can ask him if the cursor is above something at the moment of click
@@ -124,4 +130,12 @@ public class HexMapEditor : MonoBehaviour
     public void SetApplyWaterLevel(bool toggle) => _applyWaterLevel = toggle;
 
     public void SetWaterLevel(float level) => _activeWaterLevel = (int)level;
+
+	public void ShowGrid(bool visible)
+	{
+		if (visible)
+			_terrainMaterial.EnableKeyword("GRID_ON");
+		else
+			_terrainMaterial.DisableKeyword("GRID_ON");
+	}
 }
