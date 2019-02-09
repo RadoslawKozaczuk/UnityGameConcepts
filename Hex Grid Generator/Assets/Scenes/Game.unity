@@ -153,8 +153,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 291.6, y: 25.6}
-  m_SizeDelta: {x: -583.5, y: -51.2}
+  m_AnchoredPosition: {x: 529.6, y: 167.5}
+  m_SizeDelta: {x: -1059.6, y: -335.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &81740187
 MonoBehaviour:
@@ -2995,22 +2995,22 @@ PrefabInstance:
     - target: {fileID: 224158742867812320, guid: a6718c577ab82e84d9e38c84f531e6f8,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -290
+      value: -544.2
       objectReference: {fileID: 0}
     - target: {fileID: 224158742867812320, guid: a6718c577ab82e84d9e38c84f531e6f8,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: -580
+      value: -1088.4
       objectReference: {fileID: 0}
     - target: {fileID: 224158742867812320, guid: a6718c577ab82e84d9e38c84f531e6f8,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 3.199997
+      value: 137
       objectReference: {fileID: 0}
     - target: {fileID: 224158742867812320, guid: a6718c577ab82e84d9e38c84f531e6f8,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -6.4
+      value: -274.1
       objectReference: {fileID: 0}
     - target: {fileID: 114064988681992078, guid: a6718c577ab82e84d9e38c84f531e6f8,
         type: 3}
@@ -4310,6 +4310,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 636825996010321042, guid: b21ac3f9b92846e49b0ca7af1f73658d,
+        type: 3}
+      propertyPath: HexGrid
+      value: 
+      objectReference: {fileID: 204262548}
     - target: {fileID: 636825996010321046, guid: b21ac3f9b92846e49b0ca7af1f73658d,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -4415,11 +4420,6 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 636825996010321042, guid: b21ac3f9b92846e49b0ca7af1f73658d,
-        type: 3}
-      propertyPath: HexGrid
-      value: 
-      objectReference: {fileID: 204262548}
     - target: {fileID: 636825996847876005, guid: b21ac3f9b92846e49b0ca7af1f73658d,
         type: 3}
       propertyPath: m_AnchorMax.x

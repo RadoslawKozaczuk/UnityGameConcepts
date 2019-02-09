@@ -6,11 +6,6 @@ public class HexCell : MonoBehaviour
     #region Properties
     public Vector3 Position => transform.localPosition;
 
-    public Color Color
-    {
-        get => HexMetrics.Colors[_terrainTypeIndex];
-    }
-
     public int TerrainTypeIndex
     {
         get => _terrainTypeIndex;
@@ -45,7 +40,7 @@ public class HexCell : MonoBehaviour
             Refresh();
         }
     }
-    
+
     public bool HasRoads
     {
         get
@@ -75,7 +70,7 @@ public class HexCell : MonoBehaviour
 
     public bool IsUnderwater => _waterLevel > 0;
     #endregion
-    
+
     public HexCoordinates Coordinates;
     public RectTransform UiRect;
     public HexGridChunk Chunk;
@@ -89,7 +84,7 @@ public class HexCell : MonoBehaviour
 
     // road related
     public Vector3 RoadCenter, MiddleLeft, MiddleRight;
-    
+
     [SerializeField] HexCell[] _neighbors;
     [SerializeField] bool[] _roads;
 
@@ -121,8 +116,8 @@ public class HexCell : MonoBehaviour
     public bool HasEstuaryThroughEdge(HexDirection direction)
     {
         var neighbor = GetNeighbor(direction);
-        return neighbor == null 
-            ? false 
+        return neighbor == null
+            ? false
             : IsUnderwater == true && neighbor.IsUnderwater == false && HasRiverThroughEdge(direction);
     }
 
@@ -172,7 +167,7 @@ public class HexCell : MonoBehaviour
 
         // neighbor does not exists or its outgoing river is already set
         if (neighbor.HasOutgoingRiver) return;
-        
+
         if (!IsValidRiverDestination(neighbor)) return;
 
         HasIncomingRiver = true;
@@ -181,7 +176,7 @@ public class HexCell : MonoBehaviour
         neighbor.HasOutgoingRiver = true;
         neighbor.OutgoingRiver = direction.Opposite();
 
-        // rivers wash out roads 
+        // rivers wash out roads
         SetRoad((int)direction, false);
     }
 
@@ -192,7 +187,7 @@ public class HexCell : MonoBehaviour
 
         // neighbor does not exists or its incoming river is already set
         if (neighbor.HasIncomingRiver) return;
-        
+
         if (!IsValidRiverDestination(neighbor)) return;
 
         HasOutgoingRiver = true;

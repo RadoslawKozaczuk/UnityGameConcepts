@@ -108,6 +108,7 @@ MonoBehaviour:
   UseColors: 1
   UseUVCoordinates: 0
   UseUV2Coordinates: 0
+  UseTerrainTypes: 1
 --- !u!33 &33219398687551380
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -133,7 +134,7 @@ MeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b53fc9101d5e57440980c773f6e5c54c, type: 2}
+  - {fileID: 2100000, guid: 20aa54c81984b0d49a73068c58d045bc, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -248,6 +249,7 @@ MonoBehaviour:
   UseColors: 0
   UseUVCoordinates: 1
   UseUV2Coordinates: 0
+  UseTerrainTypes: 0
 --- !u!1 &1972518489123686
 GameObject:
   m_ObjectHideFlags: 0
@@ -481,6 +483,7 @@ MonoBehaviour:
   UseColors: 0
   UseUVCoordinates: 1
   UseUV2Coordinates: 1
+  UseTerrainTypes: 0
 --- !u!1 &5441507134064330283
 GameObject:
   m_ObjectHideFlags: 0
@@ -576,6 +579,7 @@ MonoBehaviour:
   UseColors: 0
   UseUVCoordinates: 0
   UseUV2Coordinates: 0
+  UseTerrainTypes: 0
 --- !u!1 &8163253592841685150
 GameObject:
   m_ObjectHideFlags: 0
@@ -671,6 +675,7 @@ MonoBehaviour:
   UseColors: 0
   UseUVCoordinates: 1
   UseUV2Coordinates: 0
+  UseTerrainTypes: 0
 --- !u!1 &8378045727369721110
 GameObject:
   m_ObjectHideFlags: 0
@@ -766,3 +771,4 @@ MonoBehaviour:
   UseColors: 0
   UseUVCoordinates: 1
   UseUV2Coordinates: 0
+  UseTerrainTypes: 0

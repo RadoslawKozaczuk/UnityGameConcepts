@@ -4,7 +4,6 @@ using System.IO;
 
 public class HexGrid : MonoBehaviour
 {
-    public Color[] Colors;
     public HexCell Cell;
     public Text CellLabelPrefab;
     public Texture2D NoiseSource;
@@ -20,11 +19,19 @@ public class HexGrid : MonoBehaviour
     {
         HexMetrics.NoiseSource = NoiseSource;
         FeatureManager.InitializeHashGrid(Seed);
-        HexMetrics.Colors = Colors;
         CreateMap(CellCountX, CellCountZ);
     }
 
-    public void CreateMap(int x, int z)
+	void OnEnable()
+	{
+		if (!HexMetrics.NoiseSource)
+		{
+			HexMetrics.NoiseSource = NoiseSource;
+			FeatureManager.InitializeHashGrid(Seed);
+		}
+	}
+
+	public void CreateMap(int x, int z)
     {
         if (x <= 0 || x % HexMetrics.ChunkSizeX != 0 || z <= 0 || z % HexMetrics.ChunkSizeZ != 0)
         {
@@ -46,16 +53,6 @@ public class HexGrid : MonoBehaviour
         CreateCells();
     }
 
-    void OnEnable()
-    {
-        if (!HexMetrics.NoiseSource)
-        {
-            HexMetrics.NoiseSource = NoiseSource;
-            FeatureManager.InitializeHashGrid(Seed);
-            HexMetrics.Colors = Colors;
-        }
-    }
-
     public HexCell GetCell(HexCoordinates coordinates)
     {
         int z = coordinates.Z;
@@ -63,7 +60,7 @@ public class HexGrid : MonoBehaviour
 
         int x = coordinates.X + z / 2;
         if (x < 0 || x >= CellCountX) return null;
-        
+
         return _cells[x + z * CellCountX];
     }
 
@@ -128,7 +125,7 @@ public class HexGrid : MonoBehaviour
         Vector3 position;
 
         // Each row is offset along the X axis by the inner radius so we have to add half of z to x.
-        // Every second row, all cells should move back one additional step. 
+        // Every second row, all cells should move back one additional step.
         // Subtracting the integer division of Z by 2 before multiplying will do the trick.
         position.x = (x + z * 0.5f - z / 2) * (HexMetrics.InnerRadius * 2f);
         position.y = 0f;
@@ -138,7 +135,7 @@ public class HexGrid : MonoBehaviour
         cell.transform.localPosition = position;
         cell.Coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
 
-        // As we go through the cells row by row, left to right, we know which cells have already been created. 
+        // As we go through the cells row by row, left to right, we know which cells have already been created.
         // Those are the cells that we can connect to.
         if (x > 0)
             cell.SetNeighbor(HexDirection.West, _cells[i - 1]);
@@ -164,7 +161,7 @@ public class HexGrid : MonoBehaviour
                     cell.SetNeighbor(HexDirection.SouthEast, _cells[i - CellCountX + 1]);
             }
         }
-        // Not every cell is connected to exactly six neighbors. 
+        // Not every cell is connected to exactly six neighbors.
         // The cells that form the border of our grid end up with at least two and at most five neighbors.
 
         Text label = Instantiate(CellLabelPrefab);

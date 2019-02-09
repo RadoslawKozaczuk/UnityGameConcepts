@@ -37,7 +37,6 @@ public static class HexMetrics
     #endregion
 
     public static Texture2D NoiseSource;
-    public static Color[] Colors;
 
     public static Vector3[] Corners = {
         new Vector3(0f, 0f, OuterRadius),
@@ -80,13 +79,13 @@ public static class HexMetrics
     /// </summary>
     public static Vector3 GetRightWaterCorner(HexDirection direction) => Corners[(int)direction + 1] * WaterFactor;
 
-    public static Vector3 GetBridge(HexDirection direction) 
+    public static Vector3 GetBridge(HexDirection direction)
         => (Corners[(int)direction] + Corners[(int)direction + 1]) * BlendFactor;
-    
+
     /// <summary>
-    /// Interpolation between two values a and b is done with a third interpolator t. 
-    /// When t is 0, the result is a.When it is 1, the result is b. 
-    /// When t lies somewhere in between 0 and 1, a and b are mixed proportionally. 
+    /// Interpolation between two values a and b is done with a third interpolator t.
+    /// When t is 0, the result is a.When it is 1, the result is b.
+    /// When t lies somewhere in between 0 and 1, a and b are mixed proportionally.
     /// Thus the formula for the interpolated result is (1 − t)a + tb.
     /// </summary>
     public static Vector3 TerraceLerp(Vector3 a, Vector3 b, int step)
@@ -95,14 +94,14 @@ public static class HexMetrics
         a.x += (b.x - a.x) * h;
         a.z += (b.z - a.z) * h;
 
-        // To only adjust Y on odd steps, we can use (step + 1) / 2. 
+        // To only adjust Y on odd steps, we can use (step + 1) / 2.
         // If we use an integer division, it will convert the sequence 1, 2, 3, 4 into 1, 1, 2, 2.
         float v = (step + 1) / 2 * VerticalTerraceStepSize;
         a.y += (b.y - a.y) * v;
 
         return a;
     }
-    
+
     public static Color TerraceLerp(Color a, Color b, int step)
     {
         float h = step * HorizontalTerraceStepSize;
@@ -126,14 +125,14 @@ public static class HexMetrics
         return HexEdgeType.Cliff;
     }
 
-    // The samples are produced by sampling the texture using bilinear filtering, using the X and Z world coordinates as UV coordinates. 
+    // The samples are produced by sampling the texture using bilinear filtering, using the X and Z world coordinates as UV coordinates.
     // As our noise source is 2D, we ignore the third wold coordinate.
-    public static Vector4 SampleNoise(Vector3 position) 
+    public static Vector4 SampleNoise(Vector3 position)
         => NoiseSource.GetPixelBilinear(position.x * NoiseScale, position.z * NoiseScale);
 
-    public static Vector3 GetSolidEdgeMiddle(HexDirection direction) 
+    public static Vector3 GetSolidEdgeMiddle(HexDirection direction)
         => (Corners[(int)direction] + Corners[(int)direction + 1]) * (0.5f * SolidFactor);
-    
+
     /// <summary>
     /// Modifies the position of the point accordingly to the noise function.
     /// </summary>

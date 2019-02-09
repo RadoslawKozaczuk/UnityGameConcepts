@@ -15,9 +15,7 @@ public class TextureArrayWizard : ScriptableWizard
 
 		// As the texture array is a single GPU resource, it uses the same filter and wrap modes for all textures.
 		Texture2D t = Textures[0];
-		Texture2DArray textureArray = new Texture2DArray(
-			t.width, t.height, Textures.Length, t.format, t.mipmapCount > 1
-		)
+		Texture2DArray textureArray = new Texture2DArray(t.width, t.height, Textures.Length, t.format, t.mipmapCount > 1)
 		{
 			anisoLevel = t.anisoLevel,
 			filterMode = t.filterMode,

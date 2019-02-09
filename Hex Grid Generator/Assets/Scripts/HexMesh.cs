@@ -8,18 +8,20 @@ public class HexMesh : MonoBehaviour
     // we need mesh collider to make the object clickable
     public MeshCollider MeshCollider;
     // some objects like rivers for example does not need to have a collider or color gradient
-    public bool UseCollider, UseColors, UseUVCoordinates, UseUV2Coordinates;
+    public bool UseCollider, UseColors, UseUVCoordinates, UseUV2Coordinates,
+		UseTerrainTypes; // only for terrain as it use different textures
 
-    [NonSerialized] List<Vector2> _uvs, _uv2s;
+	[NonSerialized] List<Vector2> _uvs, _uv2s;
+	[NonSerialized] List<Vector3> vertices, _terrainTypes;
 
-    Mesh _hexMesh;
-    // The lists that HexMesh uses are effectively temporary buffers. 
-    // They are only used during triangulation. And chunks are triangulated one at a time. 
+	Mesh _hexMesh;
+    // The lists that HexMesh uses are effectively temporary buffers.
+    // They are only used during triangulation. And chunks are triangulated one at a time.
     // So we really only need one set of lists, not one set per hex mesh object therefore they can be static.
     [NonSerialized] List<Vector3> _vertices;
     [NonSerialized] List<Color> _colors;
     [NonSerialized] List<int> _triangles;
-    
+
     void Awake()
     {
         GetComponent<MeshFilter>().mesh = _hexMesh = new Mesh();
@@ -37,7 +39,7 @@ public class HexMesh : MonoBehaviour
         _vertices = new List<Vector3>();
         _triangles = new List<int>();
     }
-    
+
     public void AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         int vertexIndex = _vertices.Count;
@@ -52,7 +54,7 @@ public class HexMesh : MonoBehaviour
         _triangles.Add(vertexIndex + 1);
         _triangles.Add(vertexIndex + 2);
     }
-    
+
     public void AddTriangleUnperturbed(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         int vertexIndex = _vertices.Count;
@@ -187,7 +189,22 @@ public class HexMesh : MonoBehaviour
         _uv2s.Add(new Vector2(uMax, vMax));
     }
 
-    public void Clear()
+	public void AddTriangleTerrainTypes(Vector3 types)
+	{
+		_terrainTypes.Add(types);
+		_terrainTypes.Add(types);
+		_terrainTypes.Add(types);
+	}
+
+	public void AddQuadTerrainTypes(Vector3 types)
+	{
+		_terrainTypes.Add(types);
+		_terrainTypes.Add(types);
+		_terrainTypes.Add(types);
+		_terrainTypes.Add(types);
+	}
+
+	public void Clear()
     {
         _hexMesh.Clear();
         _vertices = ListPool<Vector3>.Get();
@@ -200,6 +217,9 @@ public class HexMesh : MonoBehaviour
 
         if (UseUVCoordinates)
             _uv2s = ListPool<Vector2>.Get();
+
+		if (UseTerrainTypes)
+			_terrainTypes = ListPool<Vector3>.Get();
 
         _triangles = ListPool<int>.Get();
     }
@@ -227,7 +247,13 @@ public class HexMesh : MonoBehaviour
             ListPool<Vector2>.Add(_uv2s);
         }
 
-        _hexMesh.SetTriangles(_triangles, 0);
+		if (UseTerrainTypes)
+		{
+			_hexMesh.SetUVs(2, _terrainTypes);
+			ListPool<Vector3>.Add(_terrainTypes);
+		}
+
+		_hexMesh.SetTriangles(_triangles, 0);
         ListPool<int>.Add(_triangles);
         _hexMesh.RecalculateNormals();
 
