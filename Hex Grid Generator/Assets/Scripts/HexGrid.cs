@@ -82,25 +82,44 @@ public class HexGrid : MonoBehaviour
 			_cells[i].Distance = int.MaxValue;
 
 		var delay = new WaitForSeconds(1 / 60f);
-		var queue = new Queue<HexCell>();
+		var queue = new List<HexCell>();
 		cell.Distance = 0;
-		queue.Enqueue(cell);
+		queue.Add(cell);
 
 		while (queue.Count > 0)
 		{
 			yield return delay;
-			HexCell current = queue.Dequeue();
+			HexCell current = queue[0];
+			queue.RemoveAt(0);
 			for (HexDirection dir = HexDirection.NorthEast; dir <= HexDirection.NorthWest; dir++)
 			{
 				HexCell neighbor = current.GetNeighbor(dir);
-				if (neighbor == null
-					|| neighbor.Distance != int.MaxValue
-					|| neighbor.IsUnderwater
-					|| current.GetEdgeType(neighbor) == HexEdgeType.Cliff)
+				if (neighbor == null)
 					continue;
 
-				neighbor.Distance = current.Distance + 1;
-				queue.Enqueue(neighbor);
+				HexEdgeType edgeType = current.GetEdgeType(neighbor);
+				if(neighbor.IsUnderwater || edgeType == HexEdgeType.Cliff)
+					continue;
+
+				// roads are three times faster than not roads
+				int distanceToAdd = current.HasRoadThroughEdge(dir) ? 1 : 3;
+
+				// moving upslope is twice as expensives
+				if (edgeType == HexEdgeType.Slope && neighbor.Elevation > current.Elevation)
+					distanceToAdd *= 2;
+
+				int distance = current.Distance + distanceToAdd;
+				if (neighbor.Distance == int.MaxValue)
+				{
+					neighbor.Distance = distance;
+					queue.Add(neighbor);
+				}
+				else if (distance < neighbor.Distance)
+				{
+					neighbor.Distance = distance;
+				}
+
+				queue.Sort((x, y) => x.Distance.CompareTo(y.Distance));
 			}
 		}
 	}
