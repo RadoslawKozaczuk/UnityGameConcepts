@@ -105,6 +105,11 @@ MonoBehaviour:
   HasOutgoingRiver: 0
   IncomingRiver: 0
   OutgoingRiver: 0
+  Center: {x: 0, y: 0, z: 0}
+  WaterCenter: {x: 0, y: 0, z: 0}
+  RoadCenter: {x: 0, y: 0, z: 0}
+  MiddleLeft: {x: 0, y: 0, z: 0}
+  MiddleRight: {x: 0, y: 0, z: 0}
   _neighbors:
   - {fileID: 0}
   - {fileID: 0}

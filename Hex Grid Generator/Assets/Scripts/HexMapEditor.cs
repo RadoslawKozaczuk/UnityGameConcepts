@@ -6,8 +6,8 @@ public class HexMapEditor : MonoBehaviour
 	[SerializeField] Material _terrainMaterial;
 	[SerializeField] HexGrid _hexGrid;
 
-    HexCell _previousCell;
-    HexDirection _dragDirection;
+    HexCell _previousCell, _searchFromCell;
+	HexDirection _dragDirection;
     EditModes _riverMode, _roadMode;
 
     // TODO these default values should be read from the interface not hardcoded
@@ -30,7 +30,35 @@ public class HexMapEditor : MonoBehaviour
 
     public void SetRiverMode(int mode) => _riverMode = (EditModes)mode;
 
-    void HandleInput()
+	public void SetTerrainTypeIndex(int index) => _activeTerrainTypeIndex = index;
+
+	public void SetElevation(float elevation) => _activeElevation = (int)elevation;
+
+	public void SetApplyElevation(bool toggle) => _applyElevation = toggle;
+
+	public void SetBrushSize(float size) => _brushSize = (int)size;
+
+	public void ToggleTerrainPerturbation() => HexMetrics.ElevationPerturbFlag = !HexMetrics.ElevationPerturbFlag;
+
+	public void RecreateMap() { }
+
+	public void SetRoadMode(int mode) => _roadMode = (EditModes)mode;
+
+	public void SetApplyWaterLevel(bool toggle) => _applyWaterLevel = toggle;
+
+	public void SetWaterLevel(float level) => _activeWaterLevel = (int)level;
+
+	public void ShowGrid(bool visible)
+	{
+		if (visible)
+			_terrainMaterial.EnableKeyword("GRID_ON");
+		else
+			_terrainMaterial.DisableKeyword("GRID_ON");
+	}
+
+	public void SetEditMode(bool toggle) => _editMode = toggle;
+
+	void HandleInput()
     {
         Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 		if (Physics.Raycast(inputRay, out RaycastHit hit))
@@ -43,8 +71,19 @@ public class HexMapEditor : MonoBehaviour
 
 			if (_editMode)
 				EditCells(currentCell);
+			else if (Input.GetKey(KeyCode.LeftShift))
+			{
+				if (_searchFromCell)
+					_searchFromCell.DisableHighlight();
+
+				_searchFromCell = currentCell;
+				_searchFromCell.EnableHighlight(Color.blue);
+			}
 			else
+			{
+				currentCell.EnableHighlight(Color.green);
 				_hexGrid.FindDistancesTo(currentCell);
+			}
 
 			_previousCell = currentCell;
         }
@@ -79,68 +118,37 @@ public class HexMapEditor : MonoBehaviour
                 EditCell(_hexGrid.GetCell(new HexCoordinates(x, z)));
     }
 
-    void EditCell(HexCell cell)
-    {
-        if (cell)
-        {
-            if (_activeTerrainTypeIndex >= 0)
-                cell.TerrainTypeIndex = _activeTerrainTypeIndex;
-
-            if (_applyElevation)
-                cell.Elevation = _activeElevation;
-
-            if (_riverMode == EditModes.Remove)
-                cell.RemoveRiver();
-
-            if (_roadMode == EditModes.Remove)
-                cell.RemoveRoads();
-
-            if (_applyWaterLevel)
-                cell.WaterLevel = _activeWaterLevel;
-
-            if (_isDrag)
-            {
-                var oppositeDir = _dragDirection.Opposite();
-                HexCell otherCell = cell.GetNeighbor(oppositeDir);
-                if (otherCell)
-                {
-                    if (_riverMode == EditModes.Add)
-                        cell.SetIncomingRiver(oppositeDir, otherCell);
-                    if (_roadMode == EditModes.Add)
-                        otherCell.AddRoad(_dragDirection);
-                }
-            }
-        }
-    }
-
-    public void SetTerrainTypeIndex(int index) => _activeTerrainTypeIndex = index;
-
-    public void SetElevation(float elevation) => _activeElevation = (int)elevation;
-
-    public void SetApplyElevation(bool toggle) => _applyElevation = toggle;
-
-    public void SetBrushSize(float size) => _brushSize = (int)size;
-
-    public void ToggleTerrainPerturbation() => HexMetrics.ElevationPerturbFlag = !HexMetrics.ElevationPerturbFlag;
-
-    public void RecreateMap() { }
-
-    public void SetRoadMode(int mode) => _roadMode = (EditModes)mode;
-
-    public void SetApplyWaterLevel(bool toggle) => _applyWaterLevel = toggle;
-
-    public void SetWaterLevel(float level) => _activeWaterLevel = (int)level;
-
-	public void ShowGrid(bool visible)
+	void EditCell(HexCell cell)
 	{
-		if (visible)
-			_terrainMaterial.EnableKeyword("GRID_ON");
-		else
-			_terrainMaterial.DisableKeyword("GRID_ON");
-	}
+		if (cell)
+		{
+			if (_activeTerrainTypeIndex >= 0)
+				cell.TerrainTypeIndex = _activeTerrainTypeIndex;
 
-	public void SetEditMode(bool toggle)
-	{
-		_editMode = toggle;
+			if (_applyElevation)
+				cell.Elevation = _activeElevation;
+
+			if (_riverMode == EditModes.Remove)
+				cell.RemoveRiver();
+
+			if (_roadMode == EditModes.Remove)
+				cell.RemoveRoads();
+
+			if (_applyWaterLevel)
+				cell.WaterLevel = _activeWaterLevel;
+
+			if (_isDrag)
+			{
+				var oppositeDir = _dragDirection.Opposite();
+				HexCell otherCell = cell.GetNeighbor(oppositeDir);
+				if (otherCell)
+				{
+					if (_riverMode == EditModes.Add)
+						cell.SetIncomingRiver(oppositeDir, otherCell);
+					if (_roadMode == EditModes.Add)
+						otherCell.AddRoad(_dragDirection);
+				}
+			}
+		}
 	}
 }

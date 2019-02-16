@@ -58,6 +58,7 @@ MonoBehaviour:
   WaterShore: {fileID: 2099643255105226834}
   Estuaries: {fileID: 1243983551776687702}
   Features: {fileID: 7914980013244749295}
+  _coordinateCanvas: {fileID: 224901867044220910}
 --- !u!1 &1594358342487906
 GameObject:
   m_ObjectHideFlags: 0

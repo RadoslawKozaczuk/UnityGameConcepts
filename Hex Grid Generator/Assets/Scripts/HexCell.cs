@@ -54,7 +54,20 @@ public class HexCell : MonoBehaviour
 
     public HexDirection RiverBeginOrEndDirection => HasIncomingRiver ? IncomingRiver : OutgoingRiver;
 
-    public int WaterLevel
+	public int Distance
+	{
+		get
+		{
+			return _distance;
+		}
+		set
+		{
+			_distance = value;
+			UpdateDistanceLabel();
+		}
+	}
+
+	public int WaterLevel
     {
         get => _waterLevel;
         set
@@ -70,9 +83,11 @@ public class HexCell : MonoBehaviour
     int _waterLevel;
 
     public bool IsUnderwater => _waterLevel > 0;
-    #endregion
 
-    public HexCoordinates Coordinates;
+	public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
+	#endregion
+
+	public HexCoordinates Coordinates;
     public RectTransform UiRect;
     public HexGridChunk Chunk;
     public bool HasIncomingRiver, HasOutgoingRiver;
@@ -93,26 +108,11 @@ public class HexCell : MonoBehaviour
     int _elevation;
 	int _distance;
 
-	public int Distance
-	{
-		get
-		{
-			return _distance;
-		}
-		set
-		{
-			_distance = value;
-			UpdateDistanceLabel();
-		}
-	}
-
 	void UpdateDistanceLabel()
 	{
 		Text label = UiRect.GetComponent<Text>();
 		label.text = _distance == int.MaxValue ? "" : _distance.ToString();
 	}
-
-	public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
 
     /// <summary>
     /// Returns neighbor of the particular cell.
@@ -301,7 +301,20 @@ public class HexCell : MonoBehaviour
             _roads[i] = (roadFlags & (1 << i)) != 0;
     }
 
-    void RefreshSelfOnly() => Chunk.Refresh();
+	public void DisableHighlight()
+	{
+		Image highlight = UiRect.GetChild(0).GetComponent<Image>();
+		highlight.enabled = false;
+	}
+
+	public void EnableHighlight(Color color)
+	{
+		Image highlight = UiRect.GetChild(0).GetComponent<Image>();
+		highlight.color = color;
+		highlight.enabled = true;
+	}
+
+	void RefreshSelfOnly() => Chunk.Refresh();
 
     void Refresh()
     {
