@@ -6,7 +6,7 @@ public class HexMapEditor : MonoBehaviour
 	[SerializeField] Material _terrainMaterial;
 	[SerializeField] HexGrid _hexGrid;
 
-    HexCell _previousCell, _searchFromCell;
+    HexCell _previousCell, _searchFromCell, _searchToCell;
 	HexDirection _dragDirection;
     EditModes _riverMode, _roadMode;
 
@@ -71,18 +71,22 @@ public class HexMapEditor : MonoBehaviour
 
 			if (_editMode)
 				EditCells(currentCell);
-			else if (Input.GetKey(KeyCode.LeftShift))
+			else if (Input.GetKey(KeyCode.LeftShift) && _searchToCell != currentCell)
 			{
 				if (_searchFromCell)
 					_searchFromCell.DisableHighlight();
 
 				_searchFromCell = currentCell;
 				_searchFromCell.EnableHighlight(Color.blue);
+
+				if (_searchToCell)
+					_hexGrid.FindPath(_searchFromCell, _searchToCell);
 			}
-			else
+			else if(_searchFromCell && _searchFromCell != currentCell)
 			{
+				_searchToCell = currentCell;
 				currentCell.EnableHighlight(Color.green);
-				_hexGrid.FindDistancesTo(currentCell);
+				_hexGrid.FindPath(_searchFromCell, _searchToCell);
 			}
 
 			_previousCell = currentCell;

@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
-using System.Collections;
-using System.Collections.Generic;
 
 public class HexGrid : MonoBehaviour
 {
@@ -13,11 +11,30 @@ public class HexGrid : MonoBehaviour
     public int CellCountX = 10, CellCountZ = 5;
     public int Seed;
 
+	// this would break Unity - components created with 'new' will not be able to start coroutines or anything Unity related
+	// readonly Pathfinder _pathfinder = new Pathfinder();
+
+	/* === Explaination ===
+	    Coroutines are run by the coroutine scheduler and are bound to the MonoBehaviour that has been used to start the coroutine.
+	    StartCoroutine is an instance member of MonoBehaviour.
+
+		All Components MUST NOT be created with "new". Components always need to be created with AddComponent.
+		Components can only "live" on GameObjects.
+
+		Wrongly initialized Components (i.e. created with "new") will turn into "fake null objects".
+		"Fake null objects" are true C# managed classes but they are lacking the native C++ equivalent in the engine's core.
+		They could still be used as "normal" managed classes, but nothing related to Untiy will work.
+		Furthermore the "UnityEngine.Object" baseclass overloads the == operator and "fakes" that the object is null
+		when it's lacking the native part. That happens when you create a Component class with new or when you Destroy such an object.
+	*/
+
+	Pathfinder _pathfinder;
+
     HexCell[] _cells;
     HexGridChunk[] _chunks;
     int _chunkCountX, _chunkCountZ;
 
-    void Awake()
+	void Awake()
     {
         HexMetrics.NoiseSource = NoiseSource;
         FeatureManager.InitializeHashGrid(Seed);
@@ -26,6 +43,8 @@ public class HexGrid : MonoBehaviour
 		var pos = CellLabelPrefab.transform.position;
 		var newPos = new Vector3(pos.x, pos.y + 1, pos.z);
 		CellLabelPrefab.transform.position = newPos;
+
+		_pathfinder = GetComponent<Pathfinder>();
 	}
 
 	void OnEnable()
@@ -59,6 +78,11 @@ public class HexGrid : MonoBehaviour
         CreateCells();
     }
 
+	public void FindPath(HexCell from, HexCell to)
+	{
+		_pathfinder.FindPath(_cells, from, to);
+	}
+
     public HexCell GetCell(HexCoordinates coordinates)
     {
         int z = coordinates.Z;
@@ -69,60 +93,6 @@ public class HexGrid : MonoBehaviour
 
         return _cells[x + z * CellCountX];
     }
-
-	public void FindDistancesTo(HexCell cell)
-	{
-		StopCoroutine(Search(cell));
-		StartCoroutine(Search(cell));
-	}
-
-	IEnumerator Search(HexCell cell)
-	{
-		for (int i = 0; i < _cells.Length; i++)
-			_cells[i].Distance = int.MaxValue;
-
-		var delay = new WaitForSeconds(1 / 60f);
-		var queue = new List<HexCell>();
-		cell.Distance = 0;
-		queue.Add(cell);
-
-		while (queue.Count > 0)
-		{
-			yield return delay;
-			HexCell current = queue[0];
-			queue.RemoveAt(0);
-			for (HexDirection dir = HexDirection.NorthEast; dir <= HexDirection.NorthWest; dir++)
-			{
-				HexCell neighbor = current.GetNeighbor(dir);
-				if (neighbor == null)
-					continue;
-
-				HexEdgeType edgeType = current.GetEdgeType(neighbor);
-				if(neighbor.IsUnderwater || edgeType == HexEdgeType.Cliff)
-					continue;
-
-				// roads are three times faster than not roads
-				int distanceToAdd = current.HasRoadThroughEdge(dir) ? 1 : 3;
-
-				// moving upslope is twice as expensives
-				if (edgeType == HexEdgeType.Slope && neighbor.Elevation > current.Elevation)
-					distanceToAdd *= 2;
-
-				int distance = current.Distance + distanceToAdd;
-				if (neighbor.Distance == int.MaxValue)
-				{
-					neighbor.Distance = distance;
-					queue.Add(neighbor);
-				}
-				else if (distance < neighbor.Distance)
-				{
-					neighbor.Distance = distance;
-				}
-
-				queue.Sort((x, y) => x.Distance.CompareTo(y.Distance));
-			}
-		}
-	}
 
 	public void Save(BinaryWriter writer)
     {

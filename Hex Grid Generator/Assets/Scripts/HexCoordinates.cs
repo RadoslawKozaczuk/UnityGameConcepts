@@ -34,8 +34,7 @@ public struct HexCoordinates
         }
     }
 
-    [SerializeField]
-    int _x, _z;
+    [SerializeField] readonly int _x, _z;
 
     public HexCoordinates(int x, int z)
     {

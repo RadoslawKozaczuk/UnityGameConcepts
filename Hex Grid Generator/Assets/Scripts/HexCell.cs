@@ -101,7 +101,10 @@ public class HexCell : MonoBehaviour
     // road related
     public Vector3 RoadCenter, MiddleLeft, MiddleRight;
 
-    [SerializeField] HexCell[] _neighbors;
+	//
+	public HexCell PathFrom { get; set; }
+
+	[SerializeField] HexCell[] _neighbors;
     [SerializeField] bool[] _roads;
 
     int _terrainTypeIndex = 2;
