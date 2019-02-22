@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Pathfinder : MonoBehaviour
 {
+	PriorityQueue queue = new PriorityQueue();
+
 	public void FindPath(HexCell[] cells, HexCell fromCell, HexCell toCell)
 	{
 		for (int i = 0; i < cells.Length; i++)
@@ -20,16 +22,16 @@ public class Pathfinder : MonoBehaviour
 
 	IEnumerator Search(HexCell fromCell, HexCell toCell)
 	{
-		var delay = new WaitForSeconds(1 / 60f);
-		var queue = new List<HexCell>();
-		fromCell.Distance = 0;
-		queue.Add(fromCell);
+		queue.Clear();
 
+		var delay = new WaitForSeconds(1 / 60f);
+		fromCell.Distance = 0;
+
+		queue.Enqueue(fromCell);
 		while (queue.Count > 0)
 		{
 			yield return delay;
-			HexCell current = queue[0];
-			queue.RemoveAt(0);
+			HexCell current = queue.Dequeue();
 
 			if (current == toCell)
 			{
@@ -67,15 +69,16 @@ public class Pathfinder : MonoBehaviour
 				{
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
-					queue.Add(neighbor);
+					neighbor.SearchHeuristic = neighbor.Coordinates.DistanceTo(toCell.Coordinates);
+					queue.Enqueue(neighbor);
 				}
 				else if (distance < neighbor.Distance)
 				{
+					int oldPriority = neighbor.Distance + neighbor.SearchHeuristic;
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
+					queue.Change(neighbor, oldPriority);
 				}
-
-				queue.Sort((x, y) => x.Distance.CompareTo(y.Distance));
 			}
 		}
 	}
