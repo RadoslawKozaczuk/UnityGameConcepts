@@ -1,26 +1,32 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Pathfinder : MonoBehaviour
 {
-	PriorityQueue queue = new PriorityQueue();
-
-	// internal operational data
-	struct DataInternal
+	struct InternalData
 	{
-		public int Id; // my counter part object in cell
+		public int Id;
 		public float SearchHeuristic;
+		public int NextWithSamePriorityId;
 	}
 
-	DataInternal[] _internalDataObjects;
+	public int Count { get; private set; } = 0;
+
+	List<int> _priorityQueue = new List<int>();
+	InternalData[] _internalData;
+	HexCell[] _cells;
+
+	int _minimum = int.MaxValue;
 
 	public void FindPath(HexCell[] cells, HexCell fromCell, HexCell toCell)
 	{
-		_internalDataObjects = new DataInternal[cells.Length];
+		_cells = cells;
+		_internalData = new InternalData[cells.Length];
 
 		for (int i = 0; i < cells.Length; i++)
 		{
-			_internalDataObjects[i] = new DataInternal() { Id = i };
+			_internalData[i] = new InternalData() { Id = i };
 
 			cells[i].Distance = int.MaxValue;
 			cells[i].DisableHighlight();
@@ -34,16 +40,16 @@ public class Pathfinder : MonoBehaviour
 
 	IEnumerator Search(HexCell fromCell, HexCell toCell)
 	{
-		queue.Clear();
+		Clear();
 
 		var delay = new WaitForSeconds(1 / 60f);
 		fromCell.Distance = 0;
 
-		queue.Enqueue(fromCell, _internalDataObjects[fromCell.Id].SearchHeuristic);
-		while (queue.Count > 0)
+		Enqueue(fromCell, _internalData[fromCell.Id].SearchHeuristic);
+		while (Count > 0)
 		{
 			yield return delay;
-			HexCell current = queue.Dequeue();
+			HexCell current = Dequeue();
 
 			if(current == null)
 				break;
@@ -85,21 +91,106 @@ public class Pathfinder : MonoBehaviour
 
 				if (neighbor.Distance == int.MaxValue)
 				{
-					var searchHeuristic = _internalDataObjects[neighbor.Id].SearchHeuristic;
+					var searchHeuristic = _internalData[neighbor.Id].SearchHeuristic;
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
-					_internalDataObjects[neighbor.Id].SearchHeuristic = searchHeuristic;
-					queue.Enqueue(neighbor, searchHeuristic);
+					_internalData[neighbor.Id].SearchHeuristic = searchHeuristic;
+					Enqueue(neighbor, searchHeuristic);
 				}
 				else if (distance < neighbor.Distance)
 				{
-					var searchHeuristic = _internalDataObjects[neighbor.Id].SearchHeuristic;
+					var searchHeuristic = _internalData[neighbor.Id].SearchHeuristic;
 					float oldPriority = neighbor.Distance + searchHeuristic;
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
-					queue.Change(neighbor, searchHeuristic, oldPriority);
+					Change(neighbor, searchHeuristic, oldPriority);
 				}
 			}
 		}
+	}
+
+	public void Enqueue(HexCell cell, float searchHeuristic)
+	{
+		Count += 1;
+		int priority = Mathf.RoundToInt(cell.Distance + searchHeuristic);
+		if (priority < _minimum)
+			_minimum = priority;
+
+		// However, that only works if the list is long enough, otherwise we go out of bounds.
+		// We can prevent that by adding dummy elements to the list until it has the required length.
+		// These empty elements don't reference a cell, so they're created by adding null to the list.
+		while (priority >= _priorityQueue.Count)
+			_priorityQueue.Add(int.MinValue);
+
+		// linked list
+		_internalData[cell.Id].NextWithSamePriorityId = _priorityQueue[priority];
+
+		// When a cell is added to the queue, let's start by simply using its priority as its index, treating the list as a simple array.
+		_priorityQueue[priority] = cell.Id;
+	}
+
+	public HexCell Dequeue()
+	{
+		Count -= 1;
+
+		for (; _minimum < _priorityQueue.Count; _minimum++)
+		{
+			int id = _priorityQueue[_minimum];
+
+			if (id == int.MinValue)
+				continue;
+
+			HexCell cell = _cells[id];
+			if (cell != null)
+			{
+				_priorityQueue[_minimum] = _internalData[cell.Id].NextWithSamePriorityId;
+				return cell;
+			}
+		}
+
+		return null;
+	}
+
+	public void Clear()
+	{
+		Count = 0;
+		_priorityQueue.Clear();
+		_minimum = int.MaxValue;
+	}
+
+	public void Change(HexCell cell, float searchHeuristic, float oldPriority)
+	{
+		var index = Mathf.RoundToInt(oldPriority);
+		// Declaring the head of the old priority list to be the current cell, and also keep track of the next cell.
+		// We can directly grab the next cell, because we know that there is at least one cell at this index.
+		HexCell current = _cells[_priorityQueue[index]];
+		HexCell next = _cells[_internalData[current.Id].NextWithSamePriorityId];
+
+		// If the current cell is the changed cell, then it is the head cell and we can cut it away, as if we dequeued it.
+		if (current == cell)
+		{
+			_priorityQueue[index] = next.Id;
+		}
+		// If not, we have to follow the chain until we end up at the cell in front of the changed cell.
+		// That one holds the reference to the cell that has been changed.
+		else
+		{
+			while (next != cell)
+			{
+				current = next;
+				var nextId = _internalData[current.Id].NextWithSamePriorityId;
+				next = _cells[nextId];
+			}
+
+			// At this point, we can remove the changed cell from the linked list, by skipping it.
+			_internalData[current.Id].NextWithSamePriorityId = _internalData[cell.Id].NextWithSamePriorityId;
+		}
+
+		// After the cell has been removed, it has to be added again so it ends up in the list for its new priority.
+		Enqueue(cell, searchHeuristic);
+
+		// The Enqueue method increments the count, but we're not actually adding a new cell.
+		// So we have to decrement the count to compensate for that.
+		Count -= 1;
 	}
 }

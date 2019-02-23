@@ -85,11 +85,12 @@ public class HexCell : MonoBehaviour
     public bool IsUnderwater => _waterLevel > 0;
 
 	public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
-
-	public float SearchHeuristic { get; set; }
-	public HexCell NextWithSamePriority { get; set; }
 	#endregion
 
+	/// <summary>
+	/// Id coresponds to the cell.
+	/// </summary>
+	public int Id;
 	public HexCoordinates Coordinates;
     public RectTransform UiRect;
     public HexGridChunk Chunk;
