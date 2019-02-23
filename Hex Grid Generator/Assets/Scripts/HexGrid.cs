@@ -44,7 +44,7 @@ public class HexGrid : MonoBehaviour
 		var newPos = new Vector3(pos.x, pos.y + 1, pos.z);
 		CellLabelPrefab.transform.position = newPos;
 
-		_pathfinder = GetComponent<Pathfinder>();
+		_pathfinder = new Pathfinder(_cells.Length);
 	}
 
 	void OnEnable()

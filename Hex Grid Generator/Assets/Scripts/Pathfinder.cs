@@ -1,33 +1,43 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Pathfinder : MonoBehaviour
+public class Pathfinder
 {
 	struct InternalData
 	{
-		public int Id;
+		public readonly int Id;
 		public float SearchHeuristic;
 		public int NextWithSamePriorityId;
+
+		public InternalData (int id)
+		{
+			Id = id;
+			SearchHeuristic = 0f;
+			NextWithSamePriorityId = 0;
+		}
 	}
 
 	public int Count { get; private set; } = 0;
 
-	List<int> _priorityQueue = new List<int>();
-	InternalData[] _internalData;
+	readonly List<int> _priorityQueue = new List<int>();
+	readonly InternalData[] _internalData;
 	HexCell[] _cells;
 
 	int _minimum = int.MaxValue;
 
+	public Pathfinder(int numberOfCells)
+	{
+		_internalData = new InternalData[numberOfCells];
+		for (int i = 0; i < numberOfCells; i++)
+			_internalData[i] = new InternalData(i);
+	}
+
 	public void FindPath(HexCell[] cells, HexCell fromCell, HexCell toCell)
 	{
 		_cells = cells;
-		_internalData = new InternalData[cells.Length];
 
 		for (int i = 0; i < cells.Length; i++)
 		{
-			_internalData[i] = new InternalData() { Id = i };
-
 			cells[i].Distance = int.MaxValue;
 			cells[i].DisableHighlight();
 		}
@@ -35,20 +45,18 @@ public class Pathfinder : MonoBehaviour
 		fromCell.EnableHighlight(Color.blue);
 		toCell.EnableHighlight(Color.red);
 
-		StartCoroutine(Search(fromCell, toCell));
+		Search(fromCell, toCell);
 	}
 
-	IEnumerator Search(HexCell fromCell, HexCell toCell)
+	void Search(HexCell fromCell, HexCell toCell)
 	{
 		Clear();
 
-		var delay = new WaitForSeconds(1 / 60f);
 		fromCell.Distance = 0;
 
 		Enqueue(fromCell, _internalData[fromCell.Id].SearchHeuristic);
 		while (Count > 0)
 		{
-			yield return delay;
 			HexCell current = Dequeue();
 
 			if(current == null)
