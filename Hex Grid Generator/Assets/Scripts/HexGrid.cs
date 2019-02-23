@@ -44,7 +44,7 @@ public class HexGrid : MonoBehaviour
 		var newPos = new Vector3(pos.x, pos.y + 1, pos.z);
 		CellLabelPrefab.transform.position = newPos;
 
-		_pathfinder = new Pathfinder(_cells.Length);
+		_pathfinder = new Pathfinder(_cells);
 	}
 
 	void OnEnable()
@@ -78,12 +78,9 @@ public class HexGrid : MonoBehaviour
         CreateCells();
     }
 
-	public void FindPath(HexCell from, HexCell to)
-	{
-		_pathfinder.FindPath(_cells, from, to);
-	}
+	public void FindPath(HexCell from, HexCell to) => _pathfinder.FindPath(from, to);
 
-    public HexCell GetCell(HexCoordinates coordinates)
+	public HexCell GetCell(HexCoordinates coordinates)
     {
         int z = coordinates.Z;
         if (z < 0 || z >= CellCountZ) return null;

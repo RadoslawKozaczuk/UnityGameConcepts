@@ -21,25 +21,24 @@ public class Pathfinder
 
 	readonly List<int> _priorityQueue = new List<int>();
 	readonly InternalData[] _internalData;
-	HexCell[] _cells;
+	readonly HexCell[] _cells;
 
 	int _minimum = int.MaxValue;
 
-	public Pathfinder(int numberOfCells)
+	public Pathfinder(HexCell[] cells)
 	{
-		_internalData = new InternalData[numberOfCells];
-		for (int i = 0; i < numberOfCells; i++)
+		_cells = cells;
+		_internalData = new InternalData[cells.Length];
+		for (int i = 0; i < cells.Length; i++)
 			_internalData[i] = new InternalData(i);
 	}
 
-	public void FindPath(HexCell[] cells, HexCell fromCell, HexCell toCell)
+	public void FindPath(HexCell fromCell, HexCell toCell)
 	{
-		_cells = cells;
-
-		for (int i = 0; i < cells.Length; i++)
+		for (int i = 0; i < _cells.Length; i++)
 		{
-			cells[i].Distance = int.MaxValue;
-			cells[i].DisableHighlight();
+			_cells[i].Distance = int.MaxValue;
+			_cells[i].DisableHighlight();
 		}
 
 		fromCell.EnableHighlight(Color.blue);
