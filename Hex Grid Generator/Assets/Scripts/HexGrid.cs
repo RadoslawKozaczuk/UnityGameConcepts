@@ -158,6 +158,7 @@ public class HexGrid : MonoBehaviour
         position.z = z * (HexMetrics.OuterRadius * 1.5f);
 
         HexCell cell = _cells[i] = Instantiate(Cell);
+		cell.Id = i;
         cell.transform.localPosition = position;
         cell.Coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
 

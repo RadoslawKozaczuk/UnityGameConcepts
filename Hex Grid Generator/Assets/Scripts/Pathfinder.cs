@@ -5,10 +5,23 @@ public class Pathfinder : MonoBehaviour
 {
 	PriorityQueue queue = new PriorityQueue();
 
+	// internal operational data
+	struct DataInternal
+	{
+		public int Id; // my counter part object in cell
+		public float SearchHeuristic;
+	}
+
+	DataInternal[] _internalDataObjects;
+
 	public void FindPath(HexCell[] cells, HexCell fromCell, HexCell toCell)
 	{
+		_internalDataObjects = new DataInternal[cells.Length];
+
 		for (int i = 0; i < cells.Length; i++)
 		{
+			_internalDataObjects[i] = new DataInternal() { Id = i };
+
 			cells[i].Distance = int.MaxValue;
 			cells[i].DisableHighlight();
 		}
@@ -26,7 +39,7 @@ public class Pathfinder : MonoBehaviour
 		var delay = new WaitForSeconds(1 / 60f);
 		fromCell.Distance = 0;
 
-		queue.Enqueue(fromCell);
+		queue.Enqueue(fromCell, _internalDataObjects[fromCell.Id].SearchHeuristic);
 		while (queue.Count > 0)
 		{
 			yield return delay;
@@ -72,17 +85,19 @@ public class Pathfinder : MonoBehaviour
 
 				if (neighbor.Distance == int.MaxValue)
 				{
+					var searchHeuristic = _internalDataObjects[neighbor.Id].SearchHeuristic;
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
-					neighbor.SearchHeuristic = neighbor.Coordinates.DistanceTo(toCell.Coordinates);
-					queue.Enqueue(neighbor);
+					_internalDataObjects[neighbor.Id].SearchHeuristic = searchHeuristic;
+					queue.Enqueue(neighbor, searchHeuristic);
 				}
 				else if (distance < neighbor.Distance)
 				{
-					float oldPriority = neighbor.Distance + neighbor.SearchHeuristic;
+					var searchHeuristic = _internalDataObjects[neighbor.Id].SearchHeuristic;
+					float oldPriority = neighbor.Distance + searchHeuristic;
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
-					queue.Change(neighbor, oldPriority);
+					queue.Change(neighbor, searchHeuristic, oldPriority);
 				}
 			}
 		}

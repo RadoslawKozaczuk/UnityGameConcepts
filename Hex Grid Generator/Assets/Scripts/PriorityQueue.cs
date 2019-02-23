@@ -7,10 +7,10 @@ public class PriorityQueue
 	List<HexCell> _list = new List<HexCell>();
 	int _minimum = int.MaxValue;
 
-	public void Enqueue(HexCell cell)
+	public void Enqueue(HexCell cell, float searchHeuristic)
 	{
 		Count += 1;
-		int priority = Mathf.RoundToInt(cell.Distance + cell.SearchHeuristic);
+		int priority = Mathf.RoundToInt(cell.Distance + searchHeuristic);
 		if (priority < _minimum)
 			_minimum = priority;
 
@@ -44,7 +44,7 @@ public class PriorityQueue
 		return null;
 	}
 
-	public void Change(HexCell cell, float oldPriority)
+	public void Change(HexCell cell, float searchHeuristic, float oldPriority)
 	{
 		var index = Mathf.RoundToInt(oldPriority);
 		// Declaring the head of the old priority list to be the current cell, and also keep track of the next cell.
@@ -72,7 +72,7 @@ public class PriorityQueue
 		}
 
 		// After the cell has been removed, it has to be added again so it ends up in the list for its new priority.
-		Enqueue(cell);
+		Enqueue(cell, searchHeuristic);
 
 		// The Enqueue method increments the count, but we're not actually adding a new cell.
 		// So we have to decrement the count to compensate for that.
