@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Pathfinder : MonoBehaviour
@@ -33,6 +32,9 @@ public class Pathfinder : MonoBehaviour
 			yield return delay;
 			HexCell current = queue.Dequeue();
 
+			if(current == null)
+				break;
+
 			if (current == toCell)
 			{
 				current = current.PathFrom;
@@ -58,13 +60,16 @@ public class Pathfinder : MonoBehaviour
 					continue;
 
 				// roads are three times faster than not roads
-				int distanceToAdd = current.HasRoadThroughEdge(dir) ? 1 : 3;
+				float distanceToAdd = GameSettings.GetMovementCost(neighbor.TerrainType);
+				if (current.HasRoadThroughEdge(dir))
+					distanceToAdd /= 2;
 
 				// moving upslope is twice as expensives
 				if (edgeType == HexEdgeType.Slope && neighbor.Elevation > current.Elevation)
 					distanceToAdd *= 2;
 
-				int distance = current.Distance + distanceToAdd;
+				float distance = current.Distance + distanceToAdd;
+
 				if (neighbor.Distance == int.MaxValue)
 				{
 					neighbor.Distance = distance;
@@ -74,7 +79,7 @@ public class Pathfinder : MonoBehaviour
 				}
 				else if (distance < neighbor.Distance)
 				{
-					int oldPriority = neighbor.Distance + neighbor.SearchHeuristic;
+					float oldPriority = neighbor.Distance + neighbor.SearchHeuristic;
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
 					queue.Change(neighbor, oldPriority);

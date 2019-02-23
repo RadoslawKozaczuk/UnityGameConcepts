@@ -10,8 +10,9 @@ public class HexMapEditor : MonoBehaviour
 	HexDirection _dragDirection;
     EditModes _riverMode, _roadMode;
 
-    // TODO these default values should be read from the interface not hardcoded
-    int _activeTerrainTypeIndex = 2, _activeElevation = 1, _brushSize, _activeWaterLevel;
+	// TODO these default values should be read from the interface not hardcoded
+	TerrainTypes _activeTerrainType = TerrainTypes.Grass;
+	int _activeElevation = 1, _brushSize, _activeWaterLevel;
 	bool _applyElevation = true, _applyWaterLevel = true, _isDrag, _editMode = true;
 
 	void Awake() => _terrainMaterial.DisableKeyword("GRID_ON");
@@ -30,7 +31,7 @@ public class HexMapEditor : MonoBehaviour
 
     public void SetRiverMode(int mode) => _riverMode = (EditModes)mode;
 
-	public void SetTerrainTypeIndex(int index) => _activeTerrainTypeIndex = index;
+	public void SetTerrainTypeIndex(TerrainTypes type) => _activeTerrainType = type;
 
 	public void SetElevation(float elevation) => _activeElevation = (int)elevation;
 
@@ -126,8 +127,8 @@ public class HexMapEditor : MonoBehaviour
 	{
 		if (cell)
 		{
-			if (_activeTerrainTypeIndex >= 0)
-				cell.TerrainTypeIndex = _activeTerrainTypeIndex;
+			if (_activeTerrainType >= 0)
+				cell.TerrainType = _activeTerrainType;
 
 			if (_applyElevation)
 				cell.Elevation = _activeElevation;

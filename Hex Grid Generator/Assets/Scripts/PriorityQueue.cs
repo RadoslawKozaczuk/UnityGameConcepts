@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class PriorityQueue
 {
@@ -9,7 +10,7 @@ public class PriorityQueue
 	public void Enqueue(HexCell cell)
 	{
 		Count += 1;
-		int priority = cell.Distance + cell.SearchHeuristic;
+		int priority = Mathf.RoundToInt(cell.Distance + cell.SearchHeuristic);
 		if (priority < _minimum)
 			_minimum = priority;
 
@@ -43,17 +44,18 @@ public class PriorityQueue
 		return null;
 	}
 
-	public void Change(HexCell cell, int oldPriority)
+	public void Change(HexCell cell, float oldPriority)
 	{
+		var index = Mathf.RoundToInt(oldPriority);
 		// Declaring the head of the old priority list to be the current cell, and also keep track of the next cell.
 		// We can directly grab the next cell, because we know that there is at least one cell at this index.
-		HexCell current = _list[oldPriority];
+		HexCell current = _list[index];
 		HexCell next = current.NextWithSamePriority;
 
 		// If the current cell is the changed cell, then it is the head cell and we can cut it away, as if we dequeued it.
 		if (current == cell)
 		{
-			_list[oldPriority] = next;
+			_list[index] = next;
 		}
 		// If not, we have to follow the chain until we end up at the cell in front of the changed cell.
 		// That one holds the reference to the cell that has been changed.

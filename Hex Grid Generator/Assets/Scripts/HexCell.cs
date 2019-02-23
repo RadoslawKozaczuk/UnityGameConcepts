@@ -7,7 +7,7 @@ public class HexCell : MonoBehaviour
     #region Properties
     public Vector3 Position => transform.localPosition;
 
-    public int TerrainTypeIndex
+    public TerrainTypes TerrainType
     {
         get => _terrainTypeIndex;
         set
@@ -54,7 +54,7 @@ public class HexCell : MonoBehaviour
 
     public HexDirection RiverBeginOrEndDirection => HasIncomingRiver ? IncomingRiver : OutgoingRiver;
 
-	public int Distance
+	public float Distance
 	{
 		get
 		{
@@ -86,7 +86,7 @@ public class HexCell : MonoBehaviour
 
 	public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
 
-	public int SearchHeuristic { get; set; }
+	public float SearchHeuristic { get; set; }
 	public HexCell NextWithSamePriority { get; set; }
 	#endregion
 
@@ -110,9 +110,9 @@ public class HexCell : MonoBehaviour
 	[SerializeField] HexCell[] _neighbors;
     [SerializeField] bool[] _roads;
 
-    int _terrainTypeIndex = 2;
+    TerrainTypes _terrainTypeIndex = TerrainTypes.Grass;
     int _elevation;
-	int _distance;
+	float _distance;
 
 	void UpdateDistanceLabel()
 	{
@@ -279,7 +279,7 @@ public class HexCell : MonoBehaviour
 
     public void Load(BinaryReader reader)
     {
-        _terrainTypeIndex = reader.ReadByte();
+        _terrainTypeIndex = (TerrainTypes)reader.ReadByte();
         _elevation = reader.ReadByte();
         RefreshPosition();
         _waterLevel = reader.ReadByte();
