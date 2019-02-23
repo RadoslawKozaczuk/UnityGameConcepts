@@ -86,7 +86,7 @@ public class HexMapEditor : MonoBehaviour
 			else if(_searchFromCell && _searchFromCell != currentCell)
 			{
 				_searchToCell = currentCell;
-				currentCell.EnableHighlight(Color.green);
+				currentCell.EnableHighlight(Color.red);
 				_hexGrid.FindPath(_searchFromCell, _searchToCell);
 			}
 

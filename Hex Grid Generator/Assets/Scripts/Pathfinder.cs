@@ -33,27 +33,18 @@ public class Pathfinder
 			_internalData[i] = new InternalData(i);
 	}
 
-	public void FindPath(HexCell fromCell, HexCell toCell)
+	/// <summary>
+	/// Find the path by using classic Dijakstra algorith with some A* heuristics.
+	/// This algorithm normally return the path in reversed order.
+	/// </summary>
+	public List<int> FindPath(HexCell fromCell, HexCell toCell)
 	{
-		for (int i = 0; i < _cells.Length; i++)
-		{
-			_cells[i].Distance = int.MaxValue;
-			_cells[i].DisableHighlight();
-		}
+		var path = new List<int> { toCell.Id };
 
-		fromCell.EnableHighlight(Color.blue);
-		toCell.EnableHighlight(Color.red);
-
-		Search(fromCell, toCell);
-	}
-
-	void Search(HexCell fromCell, HexCell toCell)
-	{
 		Clear();
-
 		fromCell.Distance = 0;
-
 		Enqueue(fromCell, _internalData[fromCell.Id].SearchHeuristic);
+
 		while (Count > 0)
 		{
 			HexCell current = Dequeue();
@@ -61,18 +52,18 @@ public class Pathfinder
 			if(current == null)
 				break;
 
+			// path found
 			if (current == toCell)
 			{
-				current = current.PathFrom;
-
-				// visualize the path
-				while (current != fromCell)
+				do
 				{
-					current.EnableHighlight(Color.white);
 					current = current.PathFrom;
+					path.Add(current.Id);
 				}
+				while (current != fromCell);
 
-				break;
+				path.Reverse();
+				return path;
 			}
 
 			for (HexDirection dir = HexDirection.NorthEast; dir <= HexDirection.NorthWest; dir++)
@@ -96,9 +87,9 @@ public class Pathfinder
 
 				float distance = current.Distance + distanceToAdd;
 
+				var searchHeuristic = _internalData[neighbor.Id].SearchHeuristic;
 				if (neighbor.Distance == int.MaxValue)
 				{
-					var searchHeuristic = _internalData[neighbor.Id].SearchHeuristic;
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
 					_internalData[neighbor.Id].SearchHeuristic = searchHeuristic;
@@ -106,7 +97,6 @@ public class Pathfinder
 				}
 				else if (distance < neighbor.Distance)
 				{
-					var searchHeuristic = _internalData[neighbor.Id].SearchHeuristic;
 					float oldPriority = neighbor.Distance + searchHeuristic;
 					neighbor.Distance = distance;
 					neighbor.PathFrom = current;
@@ -114,9 +104,11 @@ public class Pathfinder
 				}
 			}
 		}
+
+		return null;
 	}
 
-	public void Enqueue(HexCell cell, float searchHeuristic)
+	void Enqueue(HexCell cell, float searchHeuristic)
 	{
 		Count += 1;
 		int priority = Mathf.RoundToInt(cell.Distance + searchHeuristic);
@@ -136,7 +128,7 @@ public class Pathfinder
 		_priorityQueue[priority] = cell.Id;
 	}
 
-	public HexCell Dequeue()
+	HexCell Dequeue()
 	{
 		Count -= 1;
 
@@ -158,14 +150,17 @@ public class Pathfinder
 		return null;
 	}
 
-	public void Clear()
+	void Clear()
 	{
+		for (int i = 0; i < _cells.Length; i++)
+			_cells[i].Distance = int.MaxValue;
+
 		Count = 0;
 		_priorityQueue.Clear();
 		_minimum = int.MaxValue;
 	}
 
-	public void Change(HexCell cell, float searchHeuristic, float oldPriority)
+	void Change(HexCell cell, float searchHeuristic, float oldPriority)
 	{
 		var index = Mathf.RoundToInt(oldPriority);
 		// Declaring the head of the old priority list to be the current cell, and also keep track of the next cell.

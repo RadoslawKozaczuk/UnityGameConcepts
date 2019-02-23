@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
+using System.Collections.Generic;
 
 public class HexGrid : MonoBehaviour
 {
@@ -29,7 +30,7 @@ public class HexGrid : MonoBehaviour
 	*/
 
 	Pathfinder _pathfinder;
-
+	List<int> _previousPath;
     HexCell[] _cells;
     HexGridChunk[] _chunks;
     int _chunkCountX, _chunkCountZ;
@@ -78,7 +79,24 @@ public class HexGrid : MonoBehaviour
         CreateCells();
     }
 
-	public void FindPath(HexCell from, HexCell to) => _pathfinder.FindPath(from, to);
+	public void FindPath(HexCell from, HexCell to)
+	{
+		var path = _pathfinder.FindPath(from, to);
+		if (path == null) return;
+
+		// clean the previous path up
+		if (_previousPath != null)
+			foreach (int id in _previousPath)
+				_cells[id].DisableHighlight();
+
+		_previousPath = path;
+
+		// visualize the path
+		_cells[path[0]].EnableHighlight(Color.blue);
+		for (int i = 1; i < path.Count - 1; i++)
+			_cells[path[i]].EnableHighlight(Color.white);
+		_cells[path[path.Count - 1]].EnableHighlight(Color.red);
+	}
 
 	public HexCell GetCell(HexCoordinates coordinates)
     {
