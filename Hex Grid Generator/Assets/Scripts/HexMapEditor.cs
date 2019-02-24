@@ -3,6 +3,7 @@ using UnityEngine.EventSystems;
 
 public class HexMapEditor : MonoBehaviour
 {
+	[SerializeField] Unit _unitPrefab;
 	[SerializeField] Material _terrainMaterial;
 	[SerializeField] HexGrid _hexGrid;
 
@@ -13,7 +14,7 @@ public class HexMapEditor : MonoBehaviour
 	// TODO these default values should be read from the interface not hardcoded
 	TerrainTypes _activeTerrainType = TerrainTypes.Grass;
 	int _activeElevation = 1, _brushSize, _activeWaterLevel;
-	bool _applyElevation = true, _applyWaterLevel = true, _isDrag, _editMode = true;
+	bool _applyElevation = true, _applyWaterLevel = true, _isDrag, _editMode;
 
 	void Awake() => _terrainMaterial.DisableKeyword("GRID_ON");
 
@@ -23,11 +24,26 @@ public class HexMapEditor : MonoBehaviour
         // so we can ask him if the cursor is above something at the moment of click
         // and if not it means we can normally process input.
         // This is done so to avoid undesirable double interacting with the UI and the grid at the same time.
-        if (Input.GetMouseButton(0) && !EventSystem.current.IsPointerOverGameObject())
-            HandleInput();
-        else
-            _previousCell = null;
-    }
+		if (!EventSystem.current.IsPointerOverGameObject())
+		{
+			if (Input.GetMouseButton(0))
+			{
+				HandleInput();
+				return;
+			}
+			if (Input.GetKeyDown(KeyCode.U))
+			{
+				if (Input.GetKey(KeyCode.LeftShift))
+					DestroyUnit();
+				else
+					CreateUnit();
+
+				return;
+			}
+		}
+
+		_previousCell = null;
+	}
 
     public void SetRiverMode(int mode) => _riverMode = (EditModes)mode;
 
@@ -61,42 +77,70 @@ public class HexMapEditor : MonoBehaviour
 
 	void HandleInput()
     {
-        Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-		if (Physics.Raycast(inputRay, out RaycastHit hit))
+		HexCell currentCell = GetCellUnderCursor();
+		if(currentCell == null)
 		{
-			HexCell currentCell = _hexGrid.GetCell(hit.point);
-			if (_previousCell && _previousCell != currentCell)
-				ValidateDrag(currentCell);
-			else
-				_isDrag = false;
+			_previousCell = null;
+			return;
+		}
 
-			if (_editMode)
-				EditCells(currentCell);
-			else if (Input.GetKey(KeyCode.LeftShift) && _searchToCell != currentCell)
-			{
-				if (_searchFromCell)
-					_searchFromCell.DisableHighlight();
+		if (_previousCell && _previousCell != currentCell)
+			ValidateDrag(currentCell);
+		else
+			_isDrag = false;
 
-				_searchFromCell = currentCell;
-				_searchFromCell.EnableHighlight(Color.blue);
+		if (_editMode)
+			EditCells(currentCell);
+		else if (Input.GetKey(KeyCode.LeftShift) && _searchToCell != currentCell)
+		{
+			if (_searchFromCell)
+				_searchFromCell.DisableHighlight();
 
-				if (_searchToCell)
-					_hexGrid.FindPath(_searchFromCell, _searchToCell);
-			}
-			else if(_searchFromCell && _searchFromCell != currentCell)
-			{
-				_searchToCell = currentCell;
-				currentCell.EnableHighlight(Color.red);
+			_searchFromCell = currentCell;
+			_searchFromCell.EnableHighlight(Color.blue);
+
+			if (_searchToCell)
 				_hexGrid.FindPath(_searchFromCell, _searchToCell);
-			}
+		}
+		else if(_searchFromCell && _searchFromCell != currentCell)
+		{
+			_searchToCell = currentCell;
+			currentCell.EnableHighlight(Color.red);
+			_hexGrid.FindPath(_searchFromCell, _searchToCell);
+		}
 
-			_previousCell = currentCell;
-        }
-        else
-            _previousCell = null;
+		_previousCell = currentCell;
     }
 
-    void ValidateDrag(HexCell currentCell)
+	HexCell GetCellUnderCursor()
+	{
+		Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+		return Physics.Raycast(inputRay, out RaycastHit hit)
+			? _hexGrid.GetCell(hit.point)
+			: null;
+	}
+
+	void CreateUnit()
+	{
+		HexCell cell = GetCellUnderCursor();
+		if (cell && !cell.Unit)
+		{
+			Unit unit = Instantiate(_unitPrefab);
+			unit.transform.SetParent(_hexGrid.transform, false);
+			unit.Location = cell;
+			unit.Orientation = Random.Range(0f, 360f);
+		}
+	}
+
+	void DestroyUnit()
+	{
+		HexCell cell = GetCellUnderCursor();
+		if (cell && cell.Unit)
+			cell.Unit.Die();
+	}
+
+	void ValidateDrag(HexCell currentCell)
     {
         for (_dragDirection = HexDirection.NorthEast; _dragDirection <= HexDirection.NorthWest; _dragDirection++)
         {

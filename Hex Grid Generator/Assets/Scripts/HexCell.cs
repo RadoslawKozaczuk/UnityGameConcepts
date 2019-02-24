@@ -66,6 +66,7 @@ public class HexCell : MonoBehaviour
 			UpdateDistanceLabel();
 		}
 	}
+	float _distance;
 
 	public int WaterLevel
     {
@@ -88,7 +89,7 @@ public class HexCell : MonoBehaviour
 	#endregion
 
 	/// <summary>
-	/// Id coresponds to the cell.
+	/// Id coresponds to the cell in the cells table.
 	/// </summary>
 	public int Id;
 	public HexCoordinates Coordinates;
@@ -96,21 +97,20 @@ public class HexCell : MonoBehaviour
     public HexGridChunk Chunk;
     public bool HasIncomingRiver, HasOutgoingRiver;
     public HexDirection IncomingRiver, OutgoingRiver;
-
     public Vector3 Center;
     public Vector3 WaterCenter;
     public EdgeVertices[] Edges = new EdgeVertices[6];
     public EdgeVertices[] WaterEdges = new EdgeVertices[6];
+	public Unit Unit;
 
-    // road related
-    public Vector3 RoadCenter, MiddleLeft, MiddleRight;
+	// road related
+	public Vector3 RoadCenter, MiddleLeft, MiddleRight;
 
 	[SerializeField] HexCell[] _neighbors;
     [SerializeField] bool[] _roads;
 
     TerrainTypes _terrainTypeIndex = TerrainTypes.Grass;
     int _elevation;
-	float _distance;
 
 	void UpdateDistanceLabel()
 	{
@@ -318,8 +318,20 @@ public class HexCell : MonoBehaviour
 		highlight.enabled = true;
 	}
 
-	void RefreshSelfOnly() => Chunk.Refresh();
+	/// <summary>
+	/// Refresh this chunk.
+	/// </summary>
+	void RefreshSelfOnly()
+	{
+		Chunk.Refresh();
 
+		if (Unit)
+			Unit.ValidateLocation();
+	}
+
+	/// <summary>
+	/// Refresh this chunk and all surrounding chunks.
+	/// </summary>
     void Refresh()
     {
         if (Chunk)
@@ -331,7 +343,10 @@ public class HexCell : MonoBehaviour
                 if (neighbor != null && neighbor.Chunk != Chunk)
                     neighbor.Chunk.Refresh();
             }
-        }
+
+			if (Unit)
+				Unit.ValidateLocation();
+		}
     }
 
     void RefreshPosition()

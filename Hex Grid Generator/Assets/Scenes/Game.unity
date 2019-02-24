@@ -3531,6 +3531,12 @@ PrefabInstance:
       propertyPath: _terrainMaterial
       value: 
       objectReference: {fileID: 2100000, guid: 20aa54c81984b0d49a73068c58d045bc, type: 2}
+    - target: {fileID: 114835155015886748, guid: a6718c577ab82e84d9e38c84f531e6f8,
+        type: 3}
+      propertyPath: _unitPrefab
+      value: 
+      objectReference: {fileID: 7941088480222414903, guid: 08d167f7f51274146943e5f88ef7b159,
+        type: 3}
     - target: {fileID: 224140064750671256, guid: a6718c577ab82e84d9e38c84f531e6f8,
         type: 3}
       propertyPath: m_AnchorMax.y
