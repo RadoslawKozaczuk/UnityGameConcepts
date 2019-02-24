@@ -105,9 +105,6 @@ public class HexCell : MonoBehaviour
     // road related
     public Vector3 RoadCenter, MiddleLeft, MiddleRight;
 
-	//
-	public HexCell PathFrom { get; set; }
-
 	[SerializeField] HexCell[] _neighbors;
     [SerializeField] bool[] _roads;
 

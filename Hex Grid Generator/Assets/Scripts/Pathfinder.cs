@@ -8,12 +8,14 @@ public class Pathfinder
 		public readonly int Id;
 		public float SearchHeuristic;
 		public int NextWithSamePriorityId;
+		public int PathFromId;
 
 		public InternalData (int id)
 		{
 			Id = id;
 			SearchHeuristic = 0f;
 			NextWithSamePriorityId = 0;
+			PathFromId = 0;
 		}
 	}
 
@@ -56,7 +58,7 @@ public class Pathfinder
 			{
 				do
 				{
-					current = current.PathFrom;
+					current = _cells[_internalData[current.Id].PathFromId];
 					path.Add(current.Id);
 				}
 				while (current != fromCell);
@@ -90,7 +92,7 @@ public class Pathfinder
 				if (neighbor.Distance == int.MaxValue)
 				{
 					neighbor.Distance = distance;
-					neighbor.PathFrom = current;
+					_internalData[neighbor.Id].PathFromId = current.Id;
 					_internalData[neighbor.Id].SearchHeuristic = searchHeuristic;
 					Enqueue(neighbor.Id, searchHeuristic);
 				}
@@ -98,7 +100,7 @@ public class Pathfinder
 				{
 					float oldPriority = neighbor.Distance + searchHeuristic;
 					neighbor.Distance = distance;
-					neighbor.PathFrom = current;
+					_internalData[neighbor.Id].PathFromId = current.Id;
 					Change(neighbor.Id, searchHeuristic, oldPriority);
 				}
 			}
