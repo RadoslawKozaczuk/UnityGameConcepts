@@ -37,6 +37,7 @@ public class Pathfinder
 	/// <summary>
 	/// Find the path by using classic Dijakstra algorith with some A* heuristics.
 	/// This algorithm normally return the path in reversed order.
+	/// Returns the list of cell IDs if the path was found, null otherwise.
 	/// </summary>
 	public List<int> FindPath(HexCell fromCell, HexCell toCell)
 	{
