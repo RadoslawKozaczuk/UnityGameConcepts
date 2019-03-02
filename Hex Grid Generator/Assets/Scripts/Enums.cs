@@ -26,5 +26,5 @@ public enum EditModes
 /// </summary>
 public enum TerrainTypes
 {
-	Grass, Mud, Sand, Snow, Stone
+	None = -1, Grass, Mud, Sand, Snow, Dirt
 }

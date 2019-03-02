@@ -176,10 +176,11 @@ public class HexGrid : MonoBehaviour
 		cell.Id = i;
         cell.transform.localPosition = position;
         cell.Coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
+		cell.TerrainType = TerrainTypes.Grass;
 
-        // As we go through the cells row by row, left to right, we know which cells have already been created.
-        // Those are the cells that we can connect to.
-        if (x > 0)
+		// As we go through the cells row by row, left to right, we know which cells have already been created.
+		// Those are the cells that we can connect to.
+		if (x > 0)
             cell.SetNeighbor(HexDirection.West, _cells[i - 1]);
         // We have two more bidirectional connections to make.
         // As these are between different grid rows, we can only connect with the previous row.

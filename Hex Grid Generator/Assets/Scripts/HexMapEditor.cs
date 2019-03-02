@@ -47,7 +47,7 @@ public class HexMapEditor : MonoBehaviour
 
     public void SetRiverMode(int mode) => _riverMode = (EditModes)mode;
 
-	public void SetTerrainTypeIndex(TerrainTypes type) => _activeTerrainType = type;
+	public void SetTerrainType(int type) => _activeTerrainType = (TerrainTypes)type;
 
 	public void SetElevation(float elevation) => _activeElevation = (int)elevation;
 
@@ -171,7 +171,7 @@ public class HexMapEditor : MonoBehaviour
 	{
 		if (cell)
 		{
-			if (_activeTerrainType >= 0)
+			if (_activeTerrainType != TerrainTypes.None)
 				cell.TerrainType = _activeTerrainType;
 
 			if (_applyElevation)
