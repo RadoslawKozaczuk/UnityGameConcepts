@@ -1,12 +1,19 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
+	public static Unit unitPrefab;
+
 	public HexCell Location
 	{
 		get => _location;
 		set
 		{
+			// inform the old location that the unit is no logner there
+			if (_location)
+				_location.Unit = null;
+
 			_location = value;
 			value.Unit = this;
 			transform.localPosition = ApplyVerticalOffset(value.Position);
@@ -35,6 +42,24 @@ public class Unit : MonoBehaviour
 		_location.Unit = null;
 		Destroy(gameObject);
 	}
+
+	public static void Load(BinaryReader reader, HexGrid grid)
+	{
+		HexCoordinates coordinates = HexCoordinates.Load(reader);
+		float orientation = reader.ReadSingle();
+		grid.AddUnit(Instantiate(unitPrefab), grid.GetCell(coordinates), orientation);
+	}
+
+	public void Save(BinaryWriter writer)
+	{
+		_location.Coordinates.Save(writer);
+		writer.Write(_orientation);
+	}
+
+	/// <summary>
+	/// Return true when the Unit can enter that cell, false otherwise.
+	/// </summary>
+	public bool IsValidDestination(HexCell cell) => !cell.IsUnderwater && !cell.Unit;
 
 	Vector3 ApplyVerticalOffset(Vector3 position) => new Vector3(position.x, position.y + 2f, position.z);
 }

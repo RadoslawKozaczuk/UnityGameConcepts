@@ -3,20 +3,23 @@ using UnityEngine.EventSystems;
 
 public class HexMapEditor : MonoBehaviour
 {
-	[SerializeField] Unit _unitPrefab;
 	[SerializeField] Material _terrainMaterial;
 	[SerializeField] HexGrid _hexGrid;
 
-    HexCell _previousCell, _searchFromCell, _searchToCell;
+    HexCell _previousCell;
 	HexDirection _dragDirection;
     EditModes _riverMode, _roadMode;
 
 	// TODO these default values should be read from the interface not hardcoded
 	TerrainTypes _activeTerrainType = TerrainTypes.Grass;
 	int _activeElevation = 1, _brushSize, _activeWaterLevel;
-	bool _applyElevation = true, _applyWaterLevel = true, _isDrag, _editMode;
+	bool _applyElevation = true, _applyWaterLevel = true, _isDrag;
 
-	void Awake() => _terrainMaterial.DisableKeyword("GRID_ON");
+	void Awake()
+	{
+		_terrainMaterial.DisableKeyword("GRID_ON");
+		SetEditMode(false);
+	}
 
 	void Update()
     {
@@ -73,7 +76,7 @@ public class HexMapEditor : MonoBehaviour
 			_terrainMaterial.DisableKeyword("GRID_ON");
 	}
 
-	public void SetEditMode(bool toggle) => _editMode = toggle;
+	public void SetEditMode(bool toggle) => enabled = toggle;
 
 	void HandleInput()
     {
@@ -89,55 +92,25 @@ public class HexMapEditor : MonoBehaviour
 		else
 			_isDrag = false;
 
-		if (_editMode)
-			EditCells(currentCell);
-		else if (Input.GetKey(KeyCode.LeftShift) && _searchToCell != currentCell)
-		{
-			if (_searchFromCell)
-				_searchFromCell.DisableHighlight();
-
-			_searchFromCell = currentCell;
-			_searchFromCell.EnableHighlight(Color.blue);
-
-			if (_searchToCell)
-				_hexGrid.FindPath(_searchFromCell, _searchToCell);
-		}
-		else if(_searchFromCell && _searchFromCell != currentCell)
-		{
-			_searchToCell = currentCell;
-			currentCell.EnableHighlight(Color.red);
-			_hexGrid.FindPath(_searchFromCell, _searchToCell);
-		}
+		EditCells(currentCell);
 
 		_previousCell = currentCell;
     }
 
-	HexCell GetCellUnderCursor()
-	{
-		Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-		return Physics.Raycast(inputRay, out RaycastHit hit)
-			? _hexGrid.GetCell(hit.point)
-			: null;
-	}
+	HexCell GetCellUnderCursor() => _hexGrid.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition));
 
 	void CreateUnit()
 	{
 		HexCell cell = GetCellUnderCursor();
 		if (cell && !cell.Unit)
-		{
-			Unit unit = Instantiate(_unitPrefab);
-			unit.transform.SetParent(_hexGrid.transform, false);
-			unit.Location = cell;
-			unit.Orientation = Random.Range(0f, 360f);
-		}
+			_hexGrid.AddUnit(Instantiate(Unit.unitPrefab), cell, Random.Range(0f, 360f));
 	}
 
 	void DestroyUnit()
 	{
 		HexCell cell = GetCellUnderCursor();
 		if (cell && cell.Unit)
-			cell.Unit.Die();
+			_hexGrid.RemoveUnit(cell.Unit);
 	}
 
 	void ValidateDrag(HexCell currentCell)

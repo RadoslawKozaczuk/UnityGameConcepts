@@ -5,7 +5,16 @@ using System.Collections.Generic;
 
 public class HexGrid : MonoBehaviour
 {
-    public HexCell Cell;
+	public bool HasPath
+	{
+		get
+		{
+			return currentPath != null && currentPath.Count > 0;
+		}
+	}
+
+	public Unit unitPrefab;
+	public HexCell Cell;
     public Text CellLabelPrefab;
     public Texture2D NoiseSource;
     public HexGridChunk ChunkPrefab;
@@ -29,8 +38,9 @@ public class HexGrid : MonoBehaviour
 		when it's lacking the native part. That happens when you create a Component class with new or when you Destroy such an object.
 	*/
 
+	List<Unit> units = new List<Unit>();
 	Pathfinder _pathfinder;
-	List<int> _previousPath;
+	List<int> currentPath;
     HexCell[] _cells;
     HexGridChunk[] _chunks;
     int _chunkCountX, _chunkCountZ;
@@ -39,7 +49,10 @@ public class HexGrid : MonoBehaviour
     {
         HexMetrics.NoiseSource = NoiseSource;
         FeatureManager.InitializeHashGrid(Seed);
-        CreateMap(CellCountX, CellCountZ);
+
+		Unit.unitPrefab = unitPrefab;
+
+		CreateMap(CellCountX, CellCountZ);
 
 		var pos = CellLabelPrefab.transform.position;
 		var newPos = new Vector3(pos.x, pos.y + 1, pos.z);
@@ -54,6 +67,8 @@ public class HexGrid : MonoBehaviour
 		{
 			HexMetrics.NoiseSource = NoiseSource;
 			FeatureManager.InitializeHashGrid(Seed);
+
+			Unit.unitPrefab = unitPrefab;
 		}
 	}
 
@@ -77,19 +92,17 @@ public class HexGrid : MonoBehaviour
 
         CreateChunks();
         CreateCells();
-    }
+		ClearUnits();
+	}
 
 	public void FindPath(HexCell from, HexCell to)
 	{
 		var path = _pathfinder.FindPath(from, to);
 		if (path == null) return;
 
-		// clean the previous path up
-		if (_previousPath != null)
-			foreach (int id in _previousPath)
-				_cells[id].DisableHighlight();
+		ClearPath();
 
-		_previousPath = path;
+		currentPath = path;
 
 		// visualize the path
 		_cells[path[0]].EnableHighlight(Color.blue);
@@ -97,6 +110,18 @@ public class HexGrid : MonoBehaviour
 			_cells[path[i]].EnableHighlight(Color.white);
 		_cells[path[path.Count - 1]].EnableHighlight(Color.red);
 	}
+
+	/// <summary>
+	/// Disables highlight for the current path.
+	/// </summary>
+	public void ClearPath()
+	{
+		if (currentPath != null)
+			foreach (int id in currentPath)
+				_cells[id].DisableHighlight();
+	}
+
+
 
 	public HexCell GetCell(HexCoordinates coordinates)
     {
@@ -116,10 +141,15 @@ public class HexGrid : MonoBehaviour
 
         for (int i = 0; i < _cells.Length; i++)
             _cells[i].Save(writer);
-    }
+
+		writer.Write(units.Count);
+		for (int i = 0; i < units.Count; i++)
+			units[i].Save(writer);
+	}
 
     public void Load(BinaryReader reader)
     {
+		ClearUnits();
 		StopAllCoroutines();
 
 		CreateMap(reader.ReadInt32(), reader.ReadInt32());
@@ -129,10 +159,18 @@ public class HexGrid : MonoBehaviour
 
         for (int i = 0; i < _chunks.Length; i++)
             _chunks[i].Refresh();
-    }
 
-    // Get cell returns cell from a given position
-    public HexCell GetCell(Vector3 position)
+		int unitCount = reader.ReadInt32();
+		for (int i = 0; i < unitCount; i++)
+		{
+			Unit.Load(reader, this);
+		}
+	}
+
+	public HexCell GetCell(Ray ray) => Physics.Raycast(ray, out RaycastHit hit) ? GetCell(hit.point) : null;
+
+	// Get cell returns cell from a given position
+	public HexCell GetCell(Vector3 position)
     {
         position = transform.InverseTransformPoint(position);
         HexCoordinates coordinates = HexCoordinates.FromPosition(position);
@@ -140,7 +178,21 @@ public class HexGrid : MonoBehaviour
         return _cells[index];
     }
 
-    void CreateChunks()
+	public void AddUnit(Unit unit, HexCell location, float orientation)
+	{
+		units.Add(unit);
+		unit.transform.SetParent(transform, false);
+		unit.Location = location;
+		unit.Orientation = orientation;
+	}
+
+	public void RemoveUnit(Unit unit)
+	{
+		units.Remove(unit);
+		unit.Die();
+	}
+
+	void CreateChunks()
     {
         _chunks = new HexGridChunk[_chunkCountX * _chunkCountZ];
 
@@ -229,4 +281,12 @@ public class HexGrid : MonoBehaviour
         int localZ = z - chunkZ * HexMetrics.ChunkSizeZ;
         chunk.AddCell(localX + localZ * HexMetrics.ChunkSizeX, cell);
     }
+
+	void ClearUnits()
+	{
+		for (int i = 0; i < units.Count; i++)
+			units[i].Die();
+
+		units.Clear();
+	}
 }

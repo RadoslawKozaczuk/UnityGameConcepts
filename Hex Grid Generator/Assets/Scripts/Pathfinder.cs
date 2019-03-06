@@ -75,7 +75,7 @@ public class Pathfinder
 					continue;
 
 				HexEdgeType edgeType = current.GetEdgeType(neighbor);
-				if (neighbor.IsUnderwater || edgeType == HexEdgeType.Cliff)
+				if (neighbor.IsUnderwater || edgeType == HexEdgeType.Cliff || neighbor.Unit)
 					continue;
 
 				// roads are three times faster than not roads
