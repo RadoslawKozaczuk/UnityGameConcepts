@@ -103,6 +103,8 @@ public class HexCell : MonoBehaviour
     public EdgeVertices[] WaterEdges = new EdgeVertices[6];
 	public Unit Unit;
 
+	public bool HasUnit { get => Unit != null; }
+
 	// road related
 	public Vector3 RoadCenter, MiddleLeft, MiddleRight;
 

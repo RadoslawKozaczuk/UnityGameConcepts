@@ -9,6 +9,7 @@ public class GameUI : MonoBehaviour
 
 	// Depending on what's happening, GameUI needs to know which cell is currently underneath the cursor.
 	HexCell currentCell;
+	HexCell previousCell;
 	Unit selectedUnit;
 
 	void Update()
@@ -39,34 +40,44 @@ public class GameUI : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// Returns true if the clicked cell is different than the previous one, otherwise false.
+	/// </summary>
 	bool UpdateCurrentCell()
 	{
 		HexCell cell =	grid.GetCell(Camera.main.ScreenPointToRay(Input.mousePosition));
-		if (cell != currentCell)
-		{
-			currentCell = cell;
-			return true;
-		}
-		return false;
+
+		// wrong selection - cell not found or is the same cell
+		if (cell == null || cell == currentCell)
+			return false;
+
+		previousCell = currentCell;
+		currentCell = cell;
+
+		return true;
 	}
 
 	void DoSelection()
 	{
-		grid.ClearPath();
-
 		if (UpdateCurrentCell())
 		{
-			selectedUnit = currentCell.Unit;
-		}
-		else if (selectedUnit)
-		{
-			if (Input.GetMouseButtonDown(1))
+			// new cell has been selected - ok what now?
+
+			// does the new cell have a unit?
+			if(currentCell.HasUnit)
 			{
-				DoMove();
+				// this unit is our new selected unit
+				selectedUnit = currentCell.Unit;
 			}
-			else
+			// does the previous cell have a unit?
+			else if(previousCell.HasUnit)
 			{
-				DoPathfinding();
+				// that means - move it
+				if (selectedUnit.IsValidDestination(currentCell))
+				{
+					grid.FindPath(selectedUnit.Location, currentCell);
+					DoMove();
+				}
 			}
 		}
 	}
