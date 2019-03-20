@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class GameUI : MonoBehaviour
@@ -26,17 +24,15 @@ public class GameUI : MonoBehaviour
 	public void SetEditMode(bool toggle)
 	{
 		enabled = !toggle;
-		//grid.ShowUI(!toggle); // I think this is not necessary in my build
-		grid.ClearPath();
 	}
 
 	// This method will be invoked when a move command is issued and we have a unit selected.
 	void DoMove()
 	{
-		if (grid.HasPath)
+		Debug.Log("DoMove initiated!!!");
+		if (selectedUnit.HasPath)
 		{
-			selectedUnit.Location = currentCell;
-			grid.ClearPath();
+			selectedUnit.Travel();
 		}
 	}
 
@@ -75,7 +71,7 @@ public class GameUI : MonoBehaviour
 				// that means - move it
 				if (selectedUnit.IsValidDestination(currentCell))
 				{
-					grid.FindPath(selectedUnit.Location, currentCell);
+					selectedUnit.PathToTravel = grid.FindPath(selectedUnit.Location, currentCell);
 					DoMove();
 				}
 			}

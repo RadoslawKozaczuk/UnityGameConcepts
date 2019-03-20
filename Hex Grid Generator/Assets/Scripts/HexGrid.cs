@@ -5,21 +5,13 @@ using System.Collections.Generic;
 
 public class HexGrid : MonoBehaviour
 {
-	public bool HasPath
-	{
-		get
-		{
-			return currentPath != null && currentPath.Count > 0;
-		}
-	}
-
 	public Unit unitPrefab;
 	public HexCell Cell;
-    public Text CellLabelPrefab;
-    public Texture2D NoiseSource;
-    public HexGridChunk ChunkPrefab;
-    public int CellCountX = 10, CellCountZ = 5;
-    public int Seed;
+	public Text CellLabelPrefab;
+	public Texture2D NoiseSource;
+	public HexGridChunk ChunkPrefab;
+	public int CellCountX = 10, CellCountZ = 5;
+	public int Seed;
 
 	// this would break Unity - components created with 'new' will not be able to start coroutines or anything Unity related
 	// readonly Pathfinder _pathfinder = new Pathfinder();
@@ -40,15 +32,14 @@ public class HexGrid : MonoBehaviour
 
 	List<Unit> units = new List<Unit>();
 	Pathfinder _pathfinder;
-	List<int> currentPath;
-    HexCell[] _cells;
-    HexGridChunk[] _chunks;
-    int _chunkCountX, _chunkCountZ;
+	public HexCell[] Cells;
+	HexGridChunk[] _chunks;
+	int _chunkCountX, _chunkCountZ;
 
 	void Awake()
-    {
-        HexMetrics.NoiseSource = NoiseSource;
-        FeatureManager.InitializeHashGrid(Seed);
+	{
+		HexMetrics.NoiseSource = NoiseSource;
+		FeatureManager.InitializeHashGrid(Seed);
 
 		Unit.unitPrefab = unitPrefab;
 
@@ -58,7 +49,7 @@ public class HexGrid : MonoBehaviour
 		var newPos = new Vector3(pos.x, pos.y + 1, pos.z);
 		CellLabelPrefab.transform.position = newPos;
 
-		_pathfinder = new Pathfinder(_cells);
+		_pathfinder = new Pathfinder(Cells);
 	}
 
 	void OnEnable()
@@ -73,55 +64,37 @@ public class HexGrid : MonoBehaviour
 	}
 
 	public void CreateMap(int x, int z)
-    {
-        if (x <= 0 || x % HexMetrics.ChunkSizeX != 0 || z <= 0 || z % HexMetrics.ChunkSizeZ != 0)
-        {
-            Debug.LogError("Unsupported map size.");
-            return;
-        }
+	{
+		if (x <= 0 || x % HexMetrics.ChunkSizeX != 0 || z <= 0 || z % HexMetrics.ChunkSizeZ != 0)
+		{
+			Debug.LogError("Unsupported map size.");
+			return;
+		}
 
-        if (_chunks != null)
-            for (int i = 0; i < _chunks.Length; i++)
-                Destroy(_chunks[i].gameObject);
+		if (_chunks != null)
+			for (int i = 0; i < _chunks.Length; i++)
+				Destroy(_chunks[i].gameObject);
 
-        CellCountX = x;
-        CellCountZ = z;
+		CellCountX = x;
+		CellCountZ = z;
 
-        _chunkCountX = CellCountX / HexMetrics.ChunkSizeX;
-        _chunkCountZ = CellCountZ / HexMetrics.ChunkSizeZ;
+		_chunkCountX = CellCountX / HexMetrics.ChunkSizeX;
+		_chunkCountZ = CellCountZ / HexMetrics.ChunkSizeZ;
 
-        CreateChunks();
-        CreateCells();
+		CreateChunks();
+		CreateCells();
 		ClearUnits();
 	}
 
-	public void FindPath(HexCell from, HexCell to)
+	public List<HexCell> FindPath(HexCell from, HexCell to)
 	{
-		var path = _pathfinder.FindPath(from, to);
-		if (path == null) return;
+		var ids = _pathfinder.FindPath(from, to);
+		var path = new List<HexCell>(ids.Count);
+		foreach (int id in ids)
+			path.Add(Cells[id]);
 
-		ClearPath();
-
-		currentPath = path;
-
-		// visualize the path
-		_cells[path[0]].EnableHighlight(Color.blue);
-		for (int i = 1; i < path.Count - 1; i++)
-			_cells[path[i]].EnableHighlight(Color.white);
-		_cells[path[path.Count - 1]].EnableHighlight(Color.red);
+		return path;
 	}
-
-	/// <summary>
-	/// Disables highlight for the current path.
-	/// </summary>
-	public void ClearPath()
-	{
-		if (currentPath != null)
-			foreach (int id in currentPath)
-				_cells[id].DisableHighlight();
-	}
-
-
 
 	public HexCell GetCell(HexCoordinates coordinates)
     {
@@ -131,7 +104,7 @@ public class HexGrid : MonoBehaviour
         int x = coordinates.X + z / 2;
         if (x < 0 || x >= CellCountX) return null;
 
-        return _cells[x + z * CellCountX];
+        return Cells[x + z * CellCountX];
     }
 
 	public void Save(BinaryWriter writer)
@@ -139,8 +112,8 @@ public class HexGrid : MonoBehaviour
         writer.Write(CellCountX);
         writer.Write(CellCountZ);
 
-        for (int i = 0; i < _cells.Length; i++)
-            _cells[i].Save(writer);
+        for (int i = 0; i < Cells.Length; i++)
+            Cells[i].Save(writer);
 
 		writer.Write(units.Count);
 		for (int i = 0; i < units.Count; i++)
@@ -154,8 +127,8 @@ public class HexGrid : MonoBehaviour
 
 		CreateMap(reader.ReadInt32(), reader.ReadInt32());
 
-        for (int i = 0; i < _cells.Length; i++)
-            _cells[i].Load(reader);
+        for (int i = 0; i < Cells.Length; i++)
+            Cells[i].Load(reader);
 
         for (int i = 0; i < _chunks.Length; i++)
             _chunks[i].Refresh();
@@ -175,7 +148,7 @@ public class HexGrid : MonoBehaviour
         position = transform.InverseTransformPoint(position);
         HexCoordinates coordinates = HexCoordinates.FromPosition(position);
         int index = coordinates.X + coordinates.Z * CellCountX + coordinates.Z / 2;
-        return _cells[index];
+        return Cells[index];
     }
 
 	public void AddUnit(Unit unit, HexCell location, float orientation)
@@ -184,6 +157,7 @@ public class HexGrid : MonoBehaviour
 		unit.transform.SetParent(transform, false);
 		unit.Location = location;
 		unit.Orientation = orientation;
+		unit.HexGrid = this;
 	}
 
 	public void RemoveUnit(Unit unit)
@@ -206,7 +180,7 @@ public class HexGrid : MonoBehaviour
 
     void CreateCells()
     {
-        _cells = new HexCell[CellCountX * CellCountZ];
+        Cells = new HexCell[CellCountX * CellCountZ];
 
         for (int z = 0, i = 0; z < CellCountZ; z++)
             for (int x = 0; x < CellCountX; x++)
@@ -224,7 +198,7 @@ public class HexGrid : MonoBehaviour
         position.y = 0f;
         position.z = z * (HexMetrics.OuterRadius * 1.5f);
 
-        HexCell cell = _cells[i] = Instantiate(Cell);
+        HexCell cell = Cells[i] = Instantiate(Cell);
 		cell.Id = i;
         cell.transform.localPosition = position;
         cell.Coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
@@ -233,7 +207,7 @@ public class HexGrid : MonoBehaviour
 		// As we go through the cells row by row, left to right, we know which cells have already been created.
 		// Those are the cells that we can connect to.
 		if (x > 0)
-            cell.SetNeighbor(HexDirection.West, _cells[i - 1]);
+            cell.SetNeighbor(HexDirection.West, Cells[i - 1]);
         // We have two more bidirectional connections to make.
         // As these are between different grid rows, we can only connect with the previous row.
         // This means that we have to skip the first row entirely.
@@ -243,17 +217,17 @@ public class HexGrid : MonoBehaviour
             // Let's first deal with the even rows. As all cells in such rows have a SE neighbor, we can connect to those.
             if ((z & 1) == 0) // bitwise and used as a mask to get an even number (even number always has 0 as last number)
             {
-                cell.SetNeighbor(HexDirection.SouthEast, _cells[i - CellCountX]);
+                cell.SetNeighbor(HexDirection.SouthEast, Cells[i - CellCountX]);
                 // We can connect to the SW neighbors as well. Except for the first cell in each row, as it doesn't have one.
                 if (x > 0)
-                    cell.SetNeighbor(HexDirection.SouthWest, _cells[i - CellCountX - 1]);
+                    cell.SetNeighbor(HexDirection.SouthWest, Cells[i - CellCountX - 1]);
             }
             // The odds rows follow the same logic, but mirrored. Once that's done, all neighbors in our grid are connected.
             else
             {
-                cell.SetNeighbor(HexDirection.SouthWest, _cells[i - CellCountX]);
+                cell.SetNeighbor(HexDirection.SouthWest, Cells[i - CellCountX]);
                 if (x < CellCountX - 1)
-                    cell.SetNeighbor(HexDirection.SouthEast, _cells[i - CellCountX + 1]);
+                    cell.SetNeighbor(HexDirection.SouthEast, Cells[i - CellCountX + 1]);
             }
         }
         // Not every cell is connected to exactly six neighbors.
