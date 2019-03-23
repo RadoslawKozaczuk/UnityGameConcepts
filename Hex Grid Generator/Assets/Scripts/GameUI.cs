@@ -29,7 +29,6 @@ public class GameUI : MonoBehaviour
 	// This method will be invoked when a move command is issued and we have a unit selected.
 	void DoMove()
 	{
-		Debug.Log("DoMove initiated!!!");
 		if (selectedUnit.HasPath)
 		{
 			selectedUnit.Travel();

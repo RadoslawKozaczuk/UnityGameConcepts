@@ -22,7 +22,7 @@ public class Unit : MonoBehaviour
 
 			_location = value;
 			value.Unit = this;
-			transform.localPosition = ApplyVerticalOffset(value.Position);
+			transform.localPosition = value.Position;
 		}
 	}
 	HexCell _location;
@@ -106,7 +106,7 @@ public class Unit : MonoBehaviour
 	/// <summary>
 	/// Disables highlight for the current path.
 	/// </summary>
-	public void ClearPath()
+	public void DisablePathHighlight()
 	{
 		foreach (HexCell cell in PathToTravel)
 			cell.DisableHighlight();
@@ -127,6 +127,8 @@ public class Unit : MonoBehaviour
 	IEnumerator TravelPath()
 	{
 		Vector3 a, b, c = _pathToTravel[0].Position;
+		transform.localPosition = c;
+		yield return LookAt(_pathToTravel[1].Position); // turn towards the path you are going to take
 
 		// To prevent time loss, we have to transfer the remaining time from one segment to the next.
 		// This can be done by keeping track of t through the entire travel, not just per segment.
@@ -137,14 +139,16 @@ public class Unit : MonoBehaviour
 			a = c;
 			b = _pathToTravel[i - 1].Position;
 			c = (b + _pathToTravel[i].Position) * 0.5f;
+
 			for (; t < 1f; t += Time.deltaTime * travelSpeed)
 			{
 				transform.localPosition = Bezier.GetPointUnclamped(a, b, c, t);
 				Vector3 d = Bezier.GetDerivative(a, b, c, t);
-				d.y = 0f; // to be sure that moving up or down does not affest the rotatio
+				d.y = 0f; // to be sure that moving up or down does not affect the rotation
 				transform.localRotation = Quaternion.LookRotation(d);
 				yield return null;
 			}
+
 			t -= 1f;
 		}
 
@@ -155,7 +159,7 @@ public class Unit : MonoBehaviour
 		{
 			transform.localPosition = Bezier.GetPointUnclamped(a, b, c, t);
 			Vector3 d = Bezier.GetDerivative(a, b, c, t);
-			d.y = 0f; // to be sure that moving up or down does not affest the rotatio
+			d.y = 0f; // to be sure that moving up or down does not affect the rotation
 			transform.localRotation = Quaternion.LookRotation(d);
 			yield return null;
 		}
@@ -163,9 +167,20 @@ public class Unit : MonoBehaviour
 		// We don't end exactly at the time that the path should be finished, but just short of it.
 		// Once again, how big a difference there can be depends on the frame rate.
 		// So let's make sure that the unit ends up exactly at its destination.
-		transform.localPosition = Location.Position;
+		transform.localPosition = _pathToTravel[_pathToTravel.Count - 1].Position;
 
+		// update game mechanic unit position
+		Location = _pathToTravel[_pathToTravel.Count - 1];
+
+		// update orientation
 		Orientation = transform.localRotation.eulerAngles.y;
+
+		yield return new WaitForSeconds(0.2f);
+
+		// turn off path higllighting
+		DisablePathHighlight();
+
+		PathToTravel.Clear();
 	}
 
 	IEnumerator LookAt(Vector3 point)
@@ -174,11 +189,10 @@ public class Unit : MonoBehaviour
 		Quaternion fromRotation = transform.localRotation;
 		Quaternion toRotation =	Quaternion.LookRotation(point - transform.localPosition);
 		float angle = Quaternion.Angle(fromRotation, toRotation);
+		float speed = rotationSpeed / angle;
 
 		if (angle > 0f)
 		{
-			float speed = rotationSpeed / angle;
-
 			for (float t = Time.deltaTime * speed; t < 1f; t += Time.deltaTime * speed)
 			{
 				transform.localRotation = Quaternion.Slerp(fromRotation, toRotation, t);
@@ -190,7 +204,7 @@ public class Unit : MonoBehaviour
 		Orientation = transform.localRotation.eulerAngles.y;
 	}
 
-	public void ValidateLocation() => transform.localPosition = ApplyVerticalOffset(_location.Position);
+	public void ValidateLocation() => transform.localPosition = _location.Position;
 
 	public void Travel()
 	{
@@ -225,6 +239,4 @@ public class Unit : MonoBehaviour
 	/// Return true when the Unit can enter that cell, false otherwise.
 	/// </summary>
 	public bool IsValidDestination(HexCell cell) => !cell.IsUnderwater && !cell.Unit;
-
-	Vector3 ApplyVerticalOffset(Vector3 position) => new Vector3(position.x, position.y + 2f, position.z);
 }
