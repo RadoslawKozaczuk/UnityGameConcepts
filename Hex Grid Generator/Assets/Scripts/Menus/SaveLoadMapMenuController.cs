@@ -13,10 +13,6 @@ public class SaveLoadMapMenuController : MonoBehaviour
 
 	[SerializeField] Button _actionButton;
 
-	void Awake()
-	{
-	}
-
 	public void OpenInSaveMode()
 	{
 		_actionButton.onClick.RemoveAllListeners();
