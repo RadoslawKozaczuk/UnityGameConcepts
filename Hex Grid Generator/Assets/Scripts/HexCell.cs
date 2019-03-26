@@ -15,8 +15,8 @@ public class HexCell : MonoBehaviour
             if (_terrainTypeIndex != value)
             {
                 _terrainTypeIndex = value;
-                Refresh();
-            }
+				ShaderData.RefreshTerrain(this);
+			}
         }
     }
 
@@ -25,7 +25,8 @@ public class HexCell : MonoBehaviour
         get => _elevation;
         set
         {
-            if (_elevation == value) return;
+            if (_elevation == value)
+				return;
 
             // changing elevation may affect roads
             // if the slope become to stiff road should be removed
@@ -47,7 +48,9 @@ public class HexCell : MonoBehaviour
         get
         {
             for (int i = 0; i < _roads.Length; i++)
-                if (_roads[i]) return true;
+                if (_roads[i])
+					return true;
+
             return false;
         }
     }
@@ -86,6 +89,8 @@ public class HexCell : MonoBehaviour
     public bool IsUnderwater => _waterLevel > 0;
 
 	public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
+
+	public HexCellShaderData ShaderData { get; set; }
 	#endregion
 
 	/// <summary>
@@ -103,6 +108,9 @@ public class HexCell : MonoBehaviour
     public EdgeVertices[] WaterEdges = new EdgeVertices[6];
 	public Unit Unit;
 
+	// This represents the cell's index in the map's cell list, which matches it's index in the cell shader data.
+	public int Index { get; set; }
+
 	public bool HasUnit { get => Unit != null; }
 
 	// road related
@@ -112,7 +120,9 @@ public class HexCell : MonoBehaviour
     [SerializeField] bool[] _roads;
 
     TerrainTypes _terrainTypeIndex = TerrainTypes.Grass;
-    int _elevation;
+
+	[SerializeField]
+	int _elevation;
 
 	void UpdateDistanceLabel()
 	{
@@ -281,8 +291,8 @@ public class HexCell : MonoBehaviour
     {
         _terrainTypeIndex = (TerrainTypes)reader.ReadByte();
         _elevation = reader.ReadByte();
-        RefreshPosition();
-        _waterLevel = reader.ReadByte();
+		ShaderData.RefreshTerrain(this);
+		_waterLevel = reader.ReadByte();
 
         byte riverData = reader.ReadByte();
         if (riverData >= 128)

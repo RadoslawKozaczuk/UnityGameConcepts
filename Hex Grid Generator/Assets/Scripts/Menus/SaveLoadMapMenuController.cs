@@ -51,7 +51,7 @@ public class SaveLoadMapMenuController : MonoBehaviour
 		if (path == null)
 			return;
 
-		using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create)))
+		using (var writer = new BinaryWriter(File.Open(path, FileMode.Create)))
 		{
 			HexGrid.Save(writer);
 		}
@@ -71,7 +71,7 @@ public class SaveLoadMapMenuController : MonoBehaviour
 			return;
 		}
 
-		using (BinaryReader reader = new BinaryReader(File.OpenRead(path)))
+		using (var reader = new BinaryReader(File.OpenRead(path)))
 		{
 			HexGrid.Load(reader);
 			HexMapCamera.ValidatePosition();

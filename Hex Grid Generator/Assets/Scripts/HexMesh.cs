@@ -7,19 +7,18 @@ public class HexMesh : MonoBehaviour
 {
     // we need mesh collider to make the object clickable
     public MeshCollider MeshCollider;
-    // some objects like rivers for example does not need to have a collider or color gradient
-    public bool UseCollider, UseColors, UseUVCoordinates, UseUV2Coordinates,
-		UseTerrainTypes; // only for terrain as it use different textures
+	// some objects like rivers for example does not need to have a collider or color gradient
+	public bool UseCollider, UseCellData, UseUVCoordinates, UseUV2Coordinates;
 
 	[NonSerialized] List<Vector2> _uvs, _uv2s;
-	[NonSerialized] List<Vector3> vertices, _terrainTypes;
+	[NonSerialized] List<Vector3> _cellIndices;
 
 	Mesh _hexMesh;
     // The lists that HexMesh uses are effectively temporary buffers.
     // They are only used during triangulation. And chunks are triangulated one at a time.
     // So we really only need one set of lists, not one set per hex mesh object therefore they can be static.
     [NonSerialized] List<Vector3> _vertices;
-    [NonSerialized] List<Color> _colors;
+    [NonSerialized] List<Color> _cellWeights;
     [NonSerialized] List<int> _triangles;
 
     void Awake()
@@ -29,14 +28,15 @@ public class HexMesh : MonoBehaviour
         if (UseCollider)
             MeshCollider = gameObject.AddComponent<MeshCollider>();
 
-        if(UseColors)
-            _colors = new List<Color>();
+        if(UseCellData)
+            _cellWeights = new List<Color>();
 
         if (UseUV2Coordinates)
             _uv2s = ListPool<Vector2>.Get();
 
         _hexMesh.name = "Hex Mesh";
-        _vertices = new List<Vector3>();
+		_cellIndices = new List<Vector3>();
+		_vertices = new List<Vector3>();
         _triangles = new List<int>();
     }
 
@@ -68,24 +68,25 @@ public class HexMesh : MonoBehaviour
         _triangles.Add(vertexIndex + 2);
     }
 
-    public void AddTriangleColor(Color color)
-    {
-        _colors.Add(color);
-        _colors.Add(color);
-        _colors.Add(color);
-    }
+	public void AddTriangleCellData(Vector3 indices, Color weights1, Color weights2, Color weights3)
+	{
+		_cellIndices.Add(indices);
+		_cellIndices.Add(indices);
+		_cellIndices.Add(indices);
+		_cellWeights.Add(weights1);
+		_cellWeights.Add(weights2);
+		_cellWeights.Add(weights3);
+	}
 
-    public void AddTriangleColor(Color c1, Color c2, Color c3)
-    {
-        _colors.Add(c1);
-        _colors.Add(c2);
-        _colors.Add(c3);
-    }
+	public void AddTriangleCellData(Vector3 indices, Color weights)
+	{
+		AddTriangleCellData(indices, weights, weights, weights);
+	}
 
-    /// <summary>
-    /// Creates a quad. Verticies order: left-bottom, right-bottom, left-top, right-top.
-    /// </summary>
-    public void AddQuad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
+	/// <summary>
+	/// Creates a quad. Verticies order: left-bottom, right-bottom, left-top, right-top.
+	/// </summary>
+	public void AddQuad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
     {
         int vertexIndex = _vertices.Count;
 
@@ -119,31 +120,29 @@ public class HexMesh : MonoBehaviour
         _triangles.Add(vertexIndex + 3);
     }
 
-    public void AddQuadColor(Color c1, Color c2)
-    {
-        _colors.Add(c1);
-        _colors.Add(c1);
-        _colors.Add(c2);
-        _colors.Add(c2);
-    }
+    public void AddQuadCellData(Vector3 indices, Color weights1, Color weights2, Color weights3, Color weights4)
+	{
+		_cellIndices.Add(indices);
+		_cellIndices.Add(indices);
+		_cellIndices.Add(indices);
+		_cellIndices.Add(indices);
+		_cellWeights.Add(weights1);
+		_cellWeights.Add(weights2);
+		_cellWeights.Add(weights3);
+		_cellWeights.Add(weights4);
+	}
 
-    public void AddQuadColor(Color c1, Color c2, Color c3, Color c4)
-    {
-        _colors.Add(c1);
-        _colors.Add(c2);
-        _colors.Add(c3);
-        _colors.Add(c4);
-    }
+	public void AddQuadCellData(Vector3 indices, Color weights1, Color weights2)
+	{
+		AddQuadCellData(indices, weights1, weights1, weights2, weights2);
+	}
 
-    public void AddQuadColor(Color color)
-    {
-        _colors.Add(color);
-        _colors.Add(color);
-        _colors.Add(color);
-        _colors.Add(color);
-    }
+	public void AddQuadCellData(Vector3 indices, Color weights)
+	{
+		AddQuadCellData(indices, weights, weights, weights, weights);
+	}
 
-    public void AddTriangleUV(Vector2 uv1, Vector2 uv2, Vector3 uv3)
+	public void AddTriangleUV(Vector2 uv1, Vector2 uv2, Vector3 uv3)
     {
         _uvs.Add(uv1);
         _uvs.Add(uv2);
@@ -191,17 +190,17 @@ public class HexMesh : MonoBehaviour
 
 	public void AddTriangleTerrainTypes(Vector3 types)
 	{
-		_terrainTypes.Add(types);
-		_terrainTypes.Add(types);
-		_terrainTypes.Add(types);
+		_cellIndices.Add(types);
+		_cellIndices.Add(types);
+		_cellIndices.Add(types);
 	}
 
 	public void AddQuadTerrainTypes(Vector3 types)
 	{
-		_terrainTypes.Add(types);
-		_terrainTypes.Add(types);
-		_terrainTypes.Add(types);
-		_terrainTypes.Add(types);
+		_cellIndices.Add(types);
+		_cellIndices.Add(types);
+		_cellIndices.Add(types);
+		_cellIndices.Add(types);
 	}
 
 	public void Clear()
@@ -209,17 +208,17 @@ public class HexMesh : MonoBehaviour
         _hexMesh.Clear();
         _vertices = ListPool<Vector3>.Get();
 
-        if(UseColors)
-            _colors = ListPool<Color>.Get();
+		if (UseCellData)
+		{
+			_cellWeights = ListPool<Color>.Get();
+			_cellIndices = ListPool<Vector3>.Get();
+		}
 
         if (UseUVCoordinates)
             _uvs = ListPool<Vector2>.Get();
 
         if (UseUVCoordinates)
             _uv2s = ListPool<Vector2>.Get();
-
-		if (UseTerrainTypes)
-			_terrainTypes = ListPool<Vector3>.Get();
 
         _triangles = ListPool<int>.Get();
     }
@@ -229,11 +228,13 @@ public class HexMesh : MonoBehaviour
         _hexMesh.SetVertices(_vertices);
         ListPool<Vector3>.Add(_vertices);
 
-        if(UseColors)
+        if(UseCellData)
         {
-            _hexMesh.SetColors(_colors);
-            ListPool<Color>.Add(_colors);
-        }
+            _hexMesh.SetColors(_cellWeights);
+            ListPool<Color>.Add(_cellWeights);
+			_hexMesh.SetUVs(2, _cellIndices);
+			ListPool<Vector3>.Add(_cellIndices);
+		}
 
         if (UseUVCoordinates)
         {
@@ -246,12 +247,6 @@ public class HexMesh : MonoBehaviour
             _hexMesh.SetUVs(1, _uv2s);
             ListPool<Vector2>.Add(_uv2s);
         }
-
-		if (UseTerrainTypes)
-		{
-			_hexMesh.SetUVs(2, _terrainTypes);
-			ListPool<Vector3>.Add(_terrainTypes);
-		}
 
 		_hexMesh.SetTriangles(_triangles, 0);
         ListPool<int>.Add(_triangles);

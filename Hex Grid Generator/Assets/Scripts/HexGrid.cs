@@ -30,6 +30,7 @@ public class HexGrid : MonoBehaviour
 		when it's lacking the native part. That happens when you create a Component class with new or when you Destroy such an object.
 	*/
 
+	HexCellShaderData cellShaderData;
 	List<Unit> units = new List<Unit>();
 	Pathfinder _pathfinder;
 	public HexCell[] Cells;
@@ -43,6 +44,7 @@ public class HexGrid : MonoBehaviour
 
 		Unit.unitPrefab = unitPrefab;
 
+		cellShaderData = gameObject.AddComponent<HexCellShaderData>();
 		CreateMap(CellCountX, CellCountZ);
 
 		var pos = CellLabelPrefab.transform.position;
@@ -80,6 +82,8 @@ public class HexGrid : MonoBehaviour
 
 		_chunkCountX = CellCountX / HexMetrics.ChunkSizeX;
 		_chunkCountZ = CellCountZ / HexMetrics.ChunkSizeZ;
+
+		cellShaderData.Initialize(CellCountX, CellCountZ);
 
 		CreateChunks();
 		CreateCells();
@@ -202,6 +206,8 @@ public class HexGrid : MonoBehaviour
 		cell.Id = i;
         cell.transform.localPosition = position;
         cell.Coordinates = HexCoordinates.FromOffsetCoordinates(x, z);
+		cell.Index = i;
+		cell.ShaderData = cellShaderData;
 		cell.TerrainType = TerrainTypes.Grass;
 
 		// As we go through the cells row by row, left to right, we know which cells have already been created.

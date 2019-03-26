@@ -58,7 +58,6 @@ MonoBehaviour:
   WaterShore: {fileID: 2099643255105226834}
   Estuaries: {fileID: 1243983551776687702}
   Features: {fileID: 7914980013244749295}
-  _coordinateCanvas: {fileID: 224901867044220910}
 --- !u!1 &1594358342487906
 GameObject:
   m_ObjectHideFlags: 0
@@ -106,10 +105,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MeshCollider: {fileID: 0}
   UseCollider: 1
-  UseColors: 1
+  UseCellData: 1
   UseUVCoordinates: 0
   UseUV2Coordinates: 0
-  UseTerrainTypes: 1
 --- !u!33 &33219398687551380
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -247,10 +245,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MeshCollider: {fileID: 0}
   UseCollider: 0
-  UseColors: 0
+  UseCellData: 0
   UseUVCoordinates: 1
   UseUV2Coordinates: 0
-  UseTerrainTypes: 0
 --- !u!1 &1972518489123686
 GameObject:
   m_ObjectHideFlags: 0
@@ -481,10 +478,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MeshCollider: {fileID: 0}
   UseCollider: 0
-  UseColors: 0
+  UseCellData: 0
   UseUVCoordinates: 1
   UseUV2Coordinates: 1
-  UseTerrainTypes: 0
 --- !u!1 &5441507134064330283
 GameObject:
   m_ObjectHideFlags: 0
@@ -577,10 +573,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MeshCollider: {fileID: 0}
   UseCollider: 0
-  UseColors: 0
+  UseCellData: 0
   UseUVCoordinates: 0
   UseUV2Coordinates: 0
-  UseTerrainTypes: 0
 --- !u!1 &8163253592841685150
 GameObject:
   m_ObjectHideFlags: 0
@@ -673,10 +668,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MeshCollider: {fileID: 0}
   UseCollider: 0
-  UseColors: 0
+  UseCellData: 0
   UseUVCoordinates: 1
   UseUV2Coordinates: 0
-  UseTerrainTypes: 0
 --- !u!1 &8378045727369721110
 GameObject:
   m_ObjectHideFlags: 0
@@ -769,7 +763,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MeshCollider: {fileID: 0}
   UseCollider: 0
-  UseColors: 0
+  UseCellData: 0
   UseUVCoordinates: 1
   UseUV2Coordinates: 0
-  UseTerrainTypes: 0
