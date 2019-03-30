@@ -2,7 +2,6 @@
 
 public class HexCellShaderData : MonoBehaviour
 {
-
 	Texture2D cellTexture;
 
 	/*
@@ -17,6 +16,13 @@ public class HexCellShaderData : MonoBehaviour
 		the raw texture data instead of going through Color.
 	*/
 	Color32[] cellTextureData;
+
+	void LateUpdate()
+	{
+		cellTexture.SetPixels32(cellTextureData);
+		cellTexture.Apply();
+		enabled = false;
+	}
 
 	/*
 	 * Whenever a new map is created or loaded, we have to create a new texture with the correct size.
@@ -35,7 +41,19 @@ public class HexCellShaderData : MonoBehaviour
 			cellTexture = new Texture2D(x, z, TextureFormat.RGBA32, false, true);
 			cellTexture.filterMode = FilterMode.Point;
 			cellTexture.wrapMode = TextureWrapMode.Clamp;
+
+			// Make the cell data texture globally available to all shaders.
+			// This is convenient, as we'll be needing it in multiple shaders.
+			Shader.SetGlobalTexture("_HexCellData", cellTexture);
 		}
+
+		/*
+		 * When using a shader property, Unity also makes a texture's size available to the shader via a textureName_TexelSize variable.
+		 * This is a four-component vector which contains the multiplicative inverses of the width and height,
+		 * and the actual width and height. But when setting a texture globally, this is not done.
+		 * So let's do it ourselves, via Shader.SetGlobalVector after the texture has been created or resized.
+		 */
+		Shader.SetGlobalVector("_HexCellData_TexelSize", new Vector4(1f / x, 1f / z, x, z));
 
 		// apply all pixels data in one go
 		if (cellTextureData == null || cellTextureData.Length != x * z)
@@ -45,9 +63,7 @@ public class HexCellShaderData : MonoBehaviour
 		else
 		{
 			for (int i = 0; i < cellTextureData.Length; i++)
-			{
 				cellTextureData[i] = new Color32(0, 0, 0, 0);
-			}
 		}
 
 		enabled = true;
@@ -57,12 +73,5 @@ public class HexCellShaderData : MonoBehaviour
 	{
 		cellTextureData[cell.Index].a = (byte)cell.TerrainType;
 		enabled = true;
-	}
-
-	void LateUpdate()
-	{
-		cellTexture.SetPixels32(cellTextureData);
-		cellTexture.Apply();
-		enabled = false;
 	}
 }
