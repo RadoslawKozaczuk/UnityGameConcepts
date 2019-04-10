@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.IO;
+﻿using System.IO;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class HexCell : MonoBehaviour
@@ -91,12 +91,45 @@ public class HexCell : MonoBehaviour
 	public float StreamBedY => (Elevation + HexMetrics.StreamBedElevationOffset) * HexMetrics.ElevationStep;
 
 	public HexCellShaderData ShaderData { get; set; }
-	#endregion
 
-	/// <summary>
-	/// Id coresponds to the cell in the cells table.
-	/// </summary>
-	public int Id;
+    //  The cell simply keeps track of the view count, no matter what or where these entities are. 
+    // If the cell has a least a visibility score of 1, then it is visible, otherwise it isn't. 
+    public bool IsVisible
+    {
+        get => visibility > 0;
+    }
+
+	int visibility;
+
+    // Whenever something acquires sight of a cell, it should inform that cell about it.
+    public void IncreaseVisibility()
+    {
+        visibility += 1;
+        if (visibility == 1)
+        {
+            ShaderData.RefreshVisibility(this);
+        }
+    }
+
+    // And when something loses sight of a cell, it has to inform that cell as well.
+    public void DecreaseVisibility()
+    {
+        visibility -= 1;
+
+        if (visibility < 0)
+            Debug.LogError("Visibility can not be lower than 0");
+
+        if (visibility == 0)
+        {
+            ShaderData.RefreshVisibility(this);
+        }
+    }
+    #endregion
+
+    /// <summary>
+    /// Id coresponds to the cell in the cells table.
+    /// </summary>
+    public int Id;
 	public HexCoordinates Coordinates;
     public RectTransform UiRect;
     public HexGridChunk Chunk;

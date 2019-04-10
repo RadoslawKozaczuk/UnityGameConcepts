@@ -158,7 +158,8 @@ public class HexGrid : MonoBehaviour
 	public void AddUnit(Unit unit, HexCell location, float orientation)
 	{
 		units.Add(unit);
-		unit.transform.SetParent(transform, false);
+        unit.Grid = this;
+        unit.transform.SetParent(transform, false);
 		unit.Location = location;
 		unit.Orientation = orientation;
 		unit.HexGrid = this;
@@ -269,4 +270,22 @@ public class HexGrid : MonoBehaviour
 
 		units.Clear();
 	}
+
+    public void IncreaseVisibility(HexCell fromCell, int range)
+    {
+        List<HexCell> cells = _pathfinder.GetVisibleCells(fromCell, range);
+        for (int i = 0; i < cells.Count; i++)
+            cells[i].IncreaseVisibility();
+
+        ListPool<HexCell>.Add(cells);
+    }
+
+    public void DecreaseVisibility(HexCell fromCell, int range)
+    {
+        List<HexCell> cells = _pathfinder.GetVisibleCells(fromCell, range);
+        for (int i = 0; i < cells.Count; i++)
+            cells[i].DecreaseVisibility();
+
+        ListPool<HexCell>.Add(cells);
+    }
 }

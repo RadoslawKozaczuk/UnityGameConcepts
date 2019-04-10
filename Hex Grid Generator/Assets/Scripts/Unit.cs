@@ -9,20 +9,28 @@ public class Unit : MonoBehaviour
 	const float travelSpeed = 4f;
 	const float rotationSpeed = 180f;
 
-	public static Unit unitPrefab;
+    // vision algorith only works for 1 as for now so whatever
+    const int visionRange = 1;
 
-	public HexCell Location
+    public static Unit unitPrefab;
+
+    public HexGrid Grid { get; set; }
+
+    public HexCell Location
 	{
 		get => _location;
 		set
 		{
-			// inform the old location that the unit is no logner there
-			if (_location)
-				_location.Unit = null;
+            if (_location)
+            {
+                Grid.DecreaseVisibility(_location, visionRange);
+                _location.Unit = null; // inform the old location that the unit is no logner there
+            }
 
 			_location = value;
 			value.Unit = this;
-			transform.localPosition = value.Position;
+            Grid.IncreaseVisibility(_location, visionRange);
+            transform.localPosition = value.Position;
 		}
 	}
 	HexCell _location;
@@ -218,7 +226,10 @@ public class Unit : MonoBehaviour
 	/// </summary>
 	public void Die()
 	{
-		_location.Unit = null;
+        if (_location)
+            Grid.DecreaseVisibility(_location, visionRange);
+
+        _location.Unit = null;
 		Destroy(gameObject);
 	}
 

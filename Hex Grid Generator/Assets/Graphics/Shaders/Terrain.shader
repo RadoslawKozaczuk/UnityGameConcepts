@@ -35,6 +35,7 @@
 			float4 color : COLOR;
 			float3 worldPos;
 			float3 terrain;
+			float3 visibility; // we're passing through three separate terrain indices
 		};
 
 		// we add a float3 terrain field to the input structure and copy v.texcoord2.xyz to it
@@ -52,6 +53,12 @@
 			data.terrain.x = cell0.w;
 			data.terrain.y = cell1.w;
 			data.terrain.z = cell2.w;
+
+			// A visibility of 0 means that a cell is currently not visible and 1 if the cell is visible.
+			data.visibility.x = cell0.x;
+			data.visibility.y = cell1.x;
+			data.visibility.z = cell2.x;
+			data.visibility = lerp(0.3, 1, data.visibility); // we don't want to have complete darkness
 		}
 
 		// We have to sample the texture array three times per fragment. 
@@ -61,7 +68,7 @@
 		{
 			float3 uvw = float3(IN.worldPos.xz * 0.02, IN.terrain[index]);
 			float4 c = UNITY_SAMPLE_TEX2DARRAY(_MainTex, uvw);
-			return c * IN.color[index];
+			return c * (IN.color[index] * IN.visibility[index]);
 		}
 
 		void surf(Input IN, inout SurfaceOutputStandard o) 

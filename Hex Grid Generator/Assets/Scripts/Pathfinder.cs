@@ -111,7 +111,25 @@ public class Pathfinder
 		return null;
 	}
 
-	void Enqueue(int cellId, float searchHeuristic)
+    public List<HexCell> GetVisibleCells(HexCell fromCell, int range)
+    {
+        Debug.LogWarning("Pathfinder->GetVisibleCells method is in prelimenary version and " 
+            + "awlays returns visible cell as if the passed range value was equal to 1.");
+
+        List<HexCell> visibleCells = ListPool<HexCell>.Get();
+        visibleCells.Add(fromCell);
+
+        for (HexDirection dir = HexDirection.NorthEast; dir <= HexDirection.NorthWest; dir++)
+        {
+            var cell = fromCell.GetNeighbor(dir);
+            if(cell != null)
+                visibleCells.Add(cell);
+        }
+
+        return visibleCells;
+    }
+
+    void Enqueue(int cellId, float searchHeuristic)
 	{
 		_count += 1;
 		int priority = Mathf.RoundToInt(_cells[cellId].Distance + searchHeuristic);

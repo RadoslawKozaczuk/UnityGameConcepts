@@ -74,4 +74,13 @@ public class HexCellShaderData : MonoBehaviour
 		cellTextureData[cell.Index].a = (byte)cell.TerrainType;
 		enabled = true;
 	}
+
+    // Store the data in the R component of the cell data. 
+    // Because we're working with bytes that get converted to 0–1 values in the shader, 
+    // use (byte)255 to represent visible.
+    public void RefreshVisibility(HexCell cell)
+    {
+        cellTextureData[cell.Index].r = cell.IsVisible ? (byte)255 : (byte)0;
+        enabled = true;
+    }
 }
