@@ -114,17 +114,27 @@ public class Pathfinder
     public List<HexCell> GetVisibleCells(HexCell fromCell, int range)
     {
         Debug.LogWarning("Pathfinder->GetVisibleCells method is in prelimenary version and " 
-            + "awlays returns visible cell as if the passed range value was equal to 1.");
+            + "always returns visible cell as if the passed range value was equal to 1.");
 
         List<HexCell> visibleCells = ListPool<HexCell>.Get();
-        visibleCells.Add(fromCell);
 
-        for (HexDirection dir = HexDirection.NorthEast; dir <= HexDirection.NorthWest; dir++)
-        {
-            var cell = fromCell.GetNeighbor(dir);
-            if(cell != null)
+        // will also add the current cell to the list
+        foreach (HexCell cell in _cells)
+            if(fromCell.Coordinates.DistanceTo(cell.Coordinates) <= range)
                 visibleCells.Add(cell);
-        }
+
+        //for (HexDirection dir = HexDirection.NorthEast; dir <= HexDirection.NorthWest; dir++)
+        //{
+        //    int left = range;
+        //    while (left > 0)
+        //    {
+        //        var cell = fromCell.GetNeighbor(dir);
+        //        if (cell != null)
+        //            visibleCells.Add(cell);
+
+        //        // dla range 1
+        //    }
+        //}
 
         return visibleCells;
     }

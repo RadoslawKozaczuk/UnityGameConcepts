@@ -9,31 +9,13 @@ public struct HexCoordinates
     // If you increment one coordinate, you have to decrement another.
     // Indeed, this produces six possible directions of movement.
     // These coordinates are typically known as cube coordinates, as they are three-dimensional and the topology resembles a cube.
-    public int X
-    {
-        get
-        {
-            return _x;
-        }
-    }
+    public int X { get => _x; }
 
-    public int Z
-    {
-        get
-        {
-            return _z;
-        }
-    }
+    public int Z { get => _z; }
 
     // As we already store the X and Z coordinates, we don't need to store the Y coordinate.
     // We can include a property that computes it on demand.
-    public int Y
-    {
-        get
-        {
-            return -X - Z;
-        }
-    }
+    public int Y { get => -X - Z; }
 
     [SerializeField] int _x, _z;
 
@@ -43,17 +25,17 @@ public struct HexCoordinates
         _z = z;
     }
 
-	public int DistanceTo(HexCoordinates other)
-		=> ((_x < other.X ? other.X - _x : _x - other.X)
-			+ (Y < other.Y ? other.Y - Y : Y - other.Y)
-			+ (_z < other.Z ? other.Z - _z : _z - other.Z)) / 2;
+    public int DistanceTo(HexCoordinates other)
+        => ((_x < other.X ? other.X - _x : _x - other.X)
+            + (Y < other.Y ? other.Y - Y : Y - other.Y)
+            + (_z < other.Z ? other.Z - _z : _z - other.Z)) / 2;
 
-	// Let's fix out those X coordinates so they are aligned along a straight axis.
-	// We can do this by undoing the horizontal shift.
-	// The result is typically know as axial coordinates.
-	public static HexCoordinates FromOffsetCoordinates(int x, int z) => new HexCoordinates(x - z / 2, z);
+    // Let's fix out those X coordinates so they are aligned along a straight axis.
+    // We can do this by undoing the horizontal shift.
+    // The result is typically know as axial coordinates.
+    public static HexCoordinates FromOffsetCoordinates(int x, int z) => new HexCoordinates(x - z / 2, z);
 
-    public override string ToString() => "(" + X.ToString() + ", " + Y.ToString() + ", " + Z.ToString() + ")";
+    public override string ToString() => $"(x: {X} y: {Y} z: {Z})";
 
     public string ToStringOnSeparateLines() => X.ToString() + "\n" + Y.ToString() + "\n" + Z.ToString();
 
@@ -90,11 +72,11 @@ public struct HexCoordinates
         return new HexCoordinates(iX, iZ);
     }
 
-	public static HexCoordinates Load(BinaryReader reader) => new HexCoordinates(reader.ReadInt32(), reader.ReadInt32());
+    public static HexCoordinates Load(BinaryReader reader) => new HexCoordinates(reader.ReadInt32(), reader.ReadInt32());
 
-	public void Save(BinaryWriter writer)
-	{
-		writer.Write(_x);
-		writer.Write(_z);
-	}
+    public void Save(BinaryWriter writer)
+    {
+        writer.Write(_x);
+        writer.Write(_z);
+    }
 }

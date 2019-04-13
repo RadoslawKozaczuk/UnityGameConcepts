@@ -10,7 +10,7 @@ public class Unit : MonoBehaviour
 	const float rotationSpeed = 180f;
 
     // vision algorith only works for 1 as for now so whatever
-    const int visionRange = 1;
+    const int visionRange = 3;
 
     public static Unit unitPrefab;
 
